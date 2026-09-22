@@ -9,7 +9,7 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-      - name: Build 133 Ultimate with Download
+      - name: Build 134 Ultimate FIXED
         run: |
           rm -rf app/build.gradle build.gradle settings.gradle gradle.properties
           mkdir -p gradle/wrapper app/src/main/java/com/akhali
@@ -24,7 +24,6 @@ jobs:
                   classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.20'
               }
           }
-          task clean(type: Delete) { delete rootProject.buildDir }
           ROOT
           cat > app/build.gradle <<'APP'
           plugins { id 'com.android.application'; id 'org.jetbrains.kotlin.android' }
@@ -35,10 +34,9 @@ jobs:
                   applicationId "com.akhali.yemeni"
                   minSdk 21
                   targetSdk 33
-                  versionCode 133
-                  versionName "133-ULTIMATE"
+                  versionCode 134
+                  versionName "134-ULTIMATE-FIXED"
               }
-              buildTypes { release { minifyEnabled false } debug { minifyEnabled false } }
           }
           dependencies { implementation 'androidx.core:core-ktx:1.10.1' }
           APP
@@ -47,10 +45,8 @@ jobs:
           <uses-permission android:name="android.permission.RECORD_AUDIO"/><uses-permission android:name="android.permission.INTERNET"/>
           <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/><uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
           <uses-permission android:name="android.permission.CALL_PHONE"/><uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/><uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
-          <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
-          <application android:label="Akhali 133 Ultimate"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity><activity android:name=".OverlayActivity" android:exported="false" android:theme="@android:style/Theme.Translucent.NoTitleBar"/><activity android:name=".LabActivity" android:exported="false"/><activity android:name=".ResearchActivity" android:exported="false"/><service android:name=".BgService" android:exported="false" android:foregroundServiceType="microphone"/></application></manifest>
+          <application android:label="Akhali 134 Ultimate"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity><activity android:name=".OverlayActivity" android:exported="false" android:theme="@android:style/Theme.Translucent.NoTitleBar"/><activity android:name=".LabActivity" android:exported="false"/><activity android:name=".ResearchActivity" android:exported="false"/><service android:name=".BgService" android:exported="false" android:foregroundServiceType="microphone"/></application></manifest>
           MAN
-          mkdir -p app/src/main/java/com/akhali
           cat > app/src/main/java/com/akhali/MainActivity.kt <<'KT'
           package com.akhali
           import android.app.Activity
@@ -65,7 +61,7 @@ jobs:
               val sp=getSharedPreferences("ultimate",0)
               val ver=sp.getInt("code_ver",1)
               val l=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL; setPadding(30,30,30,30)}
-              l.addView(TextView(this).apply{text="أكحلي 133 ULTIMATE 🤖🇾🇪\n\nإصدار كوده: v$ver\nنظام Kotlin حديث\nيبرمج نفسه + يبحث + يتحكم\n\n🌐 النت: ${if(sp.getBoolean("allow_net",false))"✅" else "❌"}\n📱 التحكم: ${if(sp.getBoolean("allow_control",false))"✅" else "❌"}\n💻 البرمجة: ${if(sp.getBoolean("allow_code",false))"✅" else "❌"}"; textSize=14f})
+              l.addView(TextView(this).apply{text="أكحلي 134 ULTIMATE 🤖\n\nإصدار كوده: v$ver\nنظام Kotlin حديث\nيبرمج نفسه + يبحث + يتحكم\n\n🌐 النت: ${if(sp.getBoolean("allow_net",false))"✅" else "❌"}\n📱 التحكم: ${if(sp.getBoolean("allow_control",false))"✅" else "❌"}\n💻 البرمجة: ${if(sp.getBoolean("allow_code",false))"✅" else "❌"}"; textSize=14f})
               val b1=Button(this).apply{text="1- السماح فوق التطبيقات"}
               val bNet=Button(this).apply{text="🌐 اسمح يفتح النت ويبحث"}
               val bControl=Button(this).apply{text="📱 اسمح يتحكم بالجوال كامل"}
@@ -95,8 +91,8 @@ jobs:
               val sp=getSharedPreferences("ultimate",0)
               val root=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL; setPadding(20,20,20,20); setBackgroundColor(Color.parseColor("#FF0D1117"))}
               root.addView(TextView(this).apply{text="🔬 مختبر البرمجة الذاتية\n"; textSize=17f; setTextColor(Color.WHITE)})
-              val log=TextView(this).apply{setTextColor(Color.GREEN); setBackgroundColor(Color.BLACK); setPadding(10,10,10,10); textSize=11f; text="جاري التحميل..."}
-              fun refresh(){val ver=sp.getInt("code_ver",1); log.text="v$ver Kotlin 1.8\n\n${sp.all.filterKeys{it.startsWith("func_")}.entries.joinToString("\n"){it.key+" = "+it.value}}\n\nآخر كود: ${sp.getString("last_code","")}"}
+              val log=TextView(this).apply{setTextColor(Color.GREEN); setBackgroundColor(Color.BLACK); setPadding(10,10,10,10); textSize=11f}
+              fun refresh(){val ver=sp.getInt("code_ver",1); log.text="v$ver Kotlin 1.8\n${sp.all.filterKeys{it.startsWith("func_")}.entries.joinToString("\n"){it.key+" = "+it.value}}\nآخر كود: ${sp.getString("last_code","")}"}
               refresh()
               val btn=Button(this).apply{text="⚡ برمج دالة جديدة الآن"}
               btn.setOnClickListener{
@@ -142,7 +138,7 @@ jobs:
               super.onCreate(); tts=TextToSpeech(this,this)
               val ch=NotificationChannel("akh","Akhali",NotificationManager.IMPORTANCE_LOW)
               (getSystemService(NOTIFICATION_SERVICE) as NotificationManager).createNotificationChannel(ch)
-              startForeground(1, Notification.Builder(this,"akh").setContentTitle("أكحلي 133 ULTIMATE").setContentText("يبرمج نفسه ويتحكم").setSmallIcon(android.R.drawable.ic_btn_speak_now).build())
+              startForeground(1, Notification.Builder(this,"akh").setContentTitle("أكحلي 134 ULTIMATE").setContentText("يبرمج نفسه ويتحكم").setSmallIcon(android.R.drawable.ic_btn_speak_now).build())
             }
             override fun onInit(i:Int){tts.language=Locale("ar"); startListen()}
             fun startListen(){
@@ -193,39 +189,7 @@ jobs:
               val allowNet=sp.getBoolean("allow_net",false); val allowControl=sp.getBoolean("allow_control",false); val allowCode=sp.getBoolean("allow_code",false)
               when{
                 (q.contains("ابحث")||q.contains("تعلم")) &&!allowNet -> {
-                  root.addView(TextView(this).apply{text="\n🌐 يا شيخ تسمح لي أفتح النت وأقوم ببحوث وأتعلم بموافقتك؟"; textSize=16f; setTextColor(Color.WHITE); gravity=Gravity.CENTER})
-                  val b=Button(this).apply{text="✅ ايه اسمح افتح النت وتعلم"}; b.setOnClickListener{sp.edit().putBoolean("allow_net",true).apply(); startActivity(Intent(this, ResearchActivity::class.java).apply{putExtra("q",q)}); finish()}; root.addView(b)
+                  root.addView(TextView(this).apply{text="\n🌐 تسمح لي أفتح النت وأقوم ببحوث وأتعلم؟"; textSize=16f; setTextColor(Color.WHITE); gravity=Gravity.CENTER})
+                  val b=Button(this).apply{text="✅ ايه اسمح"}; b.setOnClickListener{sp.edit().putBoolean("allow_net",true).apply(); startActivity(Intent(this, ResearchActivity::class.java).apply{putExtra("q",q)}); finish()}; root.addView(b)
                 }
-                (q.contains("افتح")||q.contains("تحكم")||q.contains("شغل")) &&!allowControl -> {
-                  root.addView(TextView(this).apply{text="\n📱 تسمح لي أتحكم بهاتفك بالكامل بأمر منك؟"; textSize=16f; setTextColor(Color.WHITE); gravity=Gravity.CENTER})
-                  val b=Button(this).apply{text="✅ ايه اسمح تحكم"}; b.setOnClickListener{sp.edit().putBoolean("allow_control",true).apply(); handleControl(q); finish()}; root.addView(b)
-                }
-                q.contains("برمج") &&!allowCode -> {
-                  root.addView(TextView(this).apply{text="\n💻 تسمح لي أبرمج نفسي وأحدث نفسي بنفسي؟"; textSize=16f; setTextColor(Color.WHITE); gravity=Gravity.CENTER})
-                  val b=Button(this).apply{text="✅ ايه اسمح تبرمج نفسك"}; b.setOnClickListener{sp.edit().putBoolean("allow_code",true).apply(); val ver=sp.getInt("code_ver",1)+1; sp.edit().putInt("code_ver",ver).apply(); finish()}; root.addView(b)
-                }
-                else -> {
-                  var reply="أرحب يا حيدي! ULTIMATE يبرمج نفسه ويبحث ويتحكم!"
-                  if(q.contains("ابحث") && allowNet){reply="أبشر بافتح النت وأبحث وأتعلم!"; startActivity(Intent(this, ResearchActivity::class.java).apply{putExtra("q",q)})}
-                  else if((q.contains("افتح")||q.contains("شغل")) && allowControl){reply="حاضر أتحكم بجوالك!"; handleControl(q)}
-                  else if(q.contains("برمج") && allowCode){val ver=sp.getInt("code_ver",1)+1; sp.edit().putInt("code_ver",ver).apply(); reply="برمجت نفسي للجيل $ver!"}
-                  root.addView(TextView(this).apply{text="\n$reply"; textSize=18f; setTextColor(Color.YELLOW); gravity=Gravity.CENTER})
-                  Handler(Looper.getMainLooper()).postDelayed({finish()},4000)
-                }
-              }
-              setContentView(root)
-            }
-            fun handleControl(cmd:String){try{when{cmd.contains("واتس")->startActivity(packageManager.getLaunchIntentForPackage("com.whatsapp")); cmd.contains("يوتيوب")->startActivity(packageManager.getLaunchIntentForPackage("com.google.android.youtube")); cmd.contains("كاميرا")->startActivity(Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE)); cmd.contains("واي فاي")->startActivity(Intent(Settings.ACTION_WIFI_SETTINGS))}}catch(e:Exception){}}
-            override fun onInit(i:Int){tts.language=Locale("ar"); tts.speak("أرحب يا حيدي",TextToSpeech.QUEUE_FLUSH,null,null)}
-          }
-          KT5
-          curl -sL https://services.gradle.org/distributions/gradle-7.6-bin.zip -o /tmp/g.zip
-          unzip -q /tmp/g.zip -d /tmp/
-          /tmp/gradle-7.6/bin/gradle assembleDebug --no-daemon
-          ls -lh app/build/outputs/apk/debug/
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: Akhali-133-ULTIMATE-APK
-          path: app/build/outputs/apk/debug/*.apk
-          if-no-files-found: error
+                (q.contains("افتح")||q.contains("تحكم")) &&!
