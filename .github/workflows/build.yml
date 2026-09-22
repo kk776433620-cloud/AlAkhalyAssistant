@@ -8,7 +8,7 @@ jobs:
       - uses: actions/setup-java@v5
         with: { java-version: '17', distribution: 'temurin' }
 
-      - name: Build OPENABLE APK
+      - name: Build SIRI Clone
         run: |
           rm -f build.gradle settings.gradle gradle.properties
           rm -rf app build .gradle
@@ -23,17 +23,11 @@ jobs:
           cat > app/src/main/AndroidManifest.xml << 'XML'
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-            <application 
-              android:label="AlAkhaly"
-              android:theme="@android:style/Theme.Light.NoTitleBar">
-              <activity 
-                android:name=".MainActivity" 
-                android:exported="true"
-                android:theme="@android:style/Theme.Light.NoTitleBar">
-                <intent-filter>
-                  <action android:name="android.intent.action.MAIN"/>
-                  <category android:name="android.intent.category.LAUNCHER"/>
-                </intent-filter>
+            <uses-permission android:name="android.permission.RECORD_AUDIO" />
+            <uses-permission android:name="android.permission.INTERNET" />
+            <application android:label="AlAkhaly Siri" android:theme="@android:style/Theme.Light.NoTitleBar">
+              <activity android:name=".MainActivity" android:exported="true" android:theme="@android:style/Theme.Light.NoTitleBar">
+                <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
               </activity>
             </application>
           </manifest>
@@ -43,18 +37,128 @@ jobs:
           package com.alakhaly.assistant
           import android.app.Activity
           import android.os.Bundle
-          import android.widget.TextView
+          import android.widget.*
           import android.view.Gravity
-          class MainActivity : Activity() {
-            override fun onCreate(savedInstanceState: Bundle?) {
-              super.onCreate(savedInstanceState)
-              val tv = TextView(this)
-              tv.text = "AlAkhaly Assistant\n\n✅ تم التصليح!\nالتطبيق يفتح الآن بنجاح\n\nالنسخة 21"
-              tv.textSize = 22f
-              tv.gravity = Gravity.CENTER
-              tv.setPadding(50,200,50,50)
-              setContentView(tv)
-            }
+          import android.graphics.Color
+          import android.speech.RecognizerIntent
+          import android.speech.tts.TextToSpeech
+          import android.content.Intent
+          import java.util.*
+
+          class MainActivity : Activity(), TextToSpeech.OnInitListener {
+              private lateinit var tts: TextToSpeech
+              private lateinit var statusText: TextView
+              private lateinit var resultText: TextView
+              private val REQ_CODE = 100
+
+              override fun onCreate(savedInstanceState: Bundle?) {
+                  super.onCreate(savedInstanceState)
+                  tts = TextToSpeech(this, this)
+
+                  val main = LinearLayout(this).apply {
+                      orientation = LinearLayout.VERTICAL
+                      gravity = Gravity.CENTER
+                      setBackgroundColor(Color.parseColor("#101010"))
+                      setPadding(40,40,40,40)
+                  }
+
+                  statusText = TextView(this).apply {
+                      text = "🎙️ AlAkhaly Siri"
+                      textSize = 26f
+                      setTextColor(Color.WHITE)
+                      gravity = Gravity.CENTER
+                      setPadding(0,80,0,20)
+                  }
+
+                  resultText = TextView(this).apply {
+                      text = "قل: السلام عليكم\nأو: كم الساعة\nأو: افتح قرآن"
+                      textSize = 18f
+                      setTextColor(Color.parseColor("#AAAAAA"))
+                      gravity = Gravity.CENTER
+                      setPadding(20,40,20,40)
+                  }
+
+                  val micBtn = Button(this).apply {
+                      text = "🎤 اضغط وتكلم"
+                      textSize = 20f
+                      setTextColor(Color.WHITE)
+                      setBackgroundColor(Color.parseColor("#1E88E5"))
+                      setPadding(0,40,0,40)
+                  }
+
+                  val wave = TextView(this).apply {
+                      text = "● ● ●"
+                      textSize = 30f
+                      setTextColor(Color.parseColor("#1E88E5"))
+                      gravity = Gravity.CENTER
+                      setPadding(0,30,0,0)
+                  }
+
+                  micBtn.setOnClickListener { startListening() }
+
+                  main.addView(statusText)
+                  main.addView(resultText)
+                  main.addView(wave)
+                  main.addView(micBtn)
+                  setContentView(main)
+              }
+
+              fun startListening() {
+                  val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                      putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                      putExtra(RecognizerIntent.EXTRA_LANGUAGE, "ar-SA")
+                      putExtra(RecognizerIntent.EXTRA_PROMPT, "اسمعك...")
+                  }
+                  try { startActivityForResult(intent, REQ_CODE) }
+                  catch (e: Exception) { Toast.makeText(this, "جهازك ما يدعم التعرف على الصوت", Toast.LENGTH_SHORT).show() }
+              }
+
+              override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+                  super.onActivityResult(requestCode, resultCode, data)
+                  if(requestCode == REQ_CODE && resultCode == RESULT_OK && data != null) {
+                      val res = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+                      val q = res?.get(0) ?: ""
+                      resultText.text = "سمعت: $q"
+                      val ans = getSiriAnswer(q)
+                      resultText.text = "$q\n\n→ $ans"
+                      speak(ans)
+                  }
+              }
+
+              fun getSiriAnswer(q: String): String {
+                  val s = q.lowercase()
+                  return when {
+                      s.contains("سلام") -> "وعليكم السلام ورحمة الله وبركاته، أهلاً بك"
+                      s.contains("كيف حالك") -> "الحمد لله أنا بخير، أنت كيف حالك؟"
+                      s.contains("ساعة") || s.contains("وقت") -> {
+                          val c = Calendar.getInstance()
+                          "الساعة الآن ${c.get(Calendar.HOUR)} و ${c.get(Calendar.MINUTE)} دقيقة"
+                      }
+                      s.contains("قرآن") -> "بسم الله الرحمن الرحيم، ومن يتق الله يجعل له مخرجاً ويرزقه من حيث لا يحتسب"
+                      s.contains("اسمك") -> "أنا الأخالي سيري، مساعدك الشخصي الذكي"
+                      s.contains("من صنعك") -> "صنعني الأخالي، مطور يمني مبدع"
+                      s.contains("شكرا") -> "العفو، حاضر لك دائماً"
+                      s.contains("احبك") -> "وأنا أحبك أكثر، الله يسعدك"
+                      else -> "فهمت أنك قلت $q، كيف أقدر أساعدك؟"
+                  }
+              }
+
+              fun speak(text: String) {
+                  tts.language = Locale("ar")
+                  tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
+              }
+
+              override fun onInit(status: Int) {
+                  if(status == TextToSpeech.SUCCESS) {
+                      tts.language = Locale("ar")
+                  }
+              }
+
+              override fun onDestroy() {
+                  tts.stop()
+                  tts.shutdown()
+                  super.onDestroy()
+              }
           }
           KT
 
@@ -63,13 +167,11 @@ jobs:
           android {
             namespace 'com.alakhaly.assistant'
             compileSdk 33
-            defaultConfig { applicationId "com.alakhaly.assistant"; minSdk 21; targetSdk 33; versionCode 21; versionName "21.0-OPEN" }
+            defaultConfig { applicationId "com.alakhaly.assistant"; minSdk 21; targetSdk 33; versionCode 30; versionName "30.0-SIRI" }
             compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
             kotlinOptions { jvmTarget = '17' }
           }
-          dependencies {
-            implementation 'androidx.core:core-ktx:1.10.1'
-          }
+          dependencies { implementation 'androidx.core:core-ktx:1.10.1' }
           APP
 
           cat > build.gradle << 'ROOT'
@@ -93,4 +195,4 @@ jobs:
         with: { gradle-version: 7.6 }
       - run: gradle assembleDebug --no-daemon
       - uses: actions/upload-artifact@v4
-        with: { name: AlAkhali-APK-OPEN, path: app/build/outputs/apk/debug/*.apk }
+        with: { name: AlAkhali-SIRI-Voice, path: app/build/outputs/apk/debug/*.apk }
