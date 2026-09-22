@@ -23,16 +23,47 @@ jobs:
           END1
           cat > app/build.gradle << 'END2'
           plugins{ id 'com.android.application'; id 'org.jetbrains.kotlin.android' }
-          android{ namespace 'com.akhali'; compileSdk 33; defaultConfig{ applicationId "com.akhali"; minSdk 21; targetSdk 28; versionCode 103; versionName "103" }; compileOptions{ sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }; kotlinOptions{ jvmTarget='17' } }
+          android{ namespace 'com.akhali'; compileSdk 33; defaultConfig{ applicationId "com.akhali"; minSdk 21; targetSdk 33; versionCode 104; versionName "104" }; compileOptions{ sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }; kotlinOptions{ jvmTarget='17' } }
           dependencies{ implementation 'androidx.core:core-ktx:1.10.1' }
           END2
           cat > app/src/main/AndroidManifest.xml << 'END3'
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.akhali">
-            <uses-permission android:name="android.permission.RECORD_AUDIO"/><uses-permission android:name="android.permission.READ_CONTACTS"/><uses-permission android:name="android.permission.READ_PHONE_STATE"/><uses-permission android:name="android.permission.ANSWER_PHONE_CALLS"/><uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
-            <application android:label="Akhali 103"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity><service android:name=".AkhaliService" android:exported="false"/></application>
+            <uses-permission android:name="android.permission.RECORD_AUDIO"/><uses-permission android:name="android.permission.READ_CONTACTS"/><uses-permission android:name="android.permission.READ_PHONE_STATE"/><uses-permission android:name="android.permission.ANSWER_PHONE_CALLS"/><uses-permission android:name="android.permission.FOREGROUND_SERVICE"/><uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE"/><uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+            <application android:label="Akhali 104"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity><service android:name=".AkhaliService" android:exported="false" android:foregroundServiceType="microphone"/></application>
           </manifest>
           END3
+          cat > app/src/main/java/com/akhali/MainActivity.kt << 'END5'
+          package com.akhali
+          import android.Manifest
+          import android.app.Activity
+          import android.content.Intent
+          import android.content.pm.PackageManager
+          import android.os.Bundle
+          import android.widget.*
+          class MainActivity: Activity(){
+            override fun onCreate(b:Bundle?){
+              super.onCreate(b)
+              val l=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL; setPadding(40,40,40,40)}
+              l.addView(TextView(this).apply{text="Akhali 104 - تم إصلاح الزر\n\n1- اضغط السماح\n2- اضغط شغل أكحلي"; textSize=18f})
+              val btnPerm=Button(this).apply{text="1- اعطني الصلاحيات أولا"}
+              val btnStart=Button(this).apply{text="2- شغل أكحلي الآن"}
+              btnPerm.setOnClickListener{
+                requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO, Manifest.permission.READ_CONTACTS, Manifest.permission.READ_PHONE_STATE, Manifest.permission.POST_NOTIFICATIONS), 1)
+                Toast.makeText(this,"اضغط سماح لكل شي",Toast.LENGTH_LONG).show()
+              }
+              btnStart.setOnClickListener{
+                try{
+                  startForegroundService(Intent(this,AkhaliService::class.java))
+                  Toast.makeText(this,"اشتغل! شوف الإشعارات فوق",Toast.LENGTH_LONG).show()
+                }catch(e:Exception){
+                  Toast.makeText(this,"خطأ: ${e.message}",Toast.LENGTH_LONG).show()
+                }
+              }
+              l.addView(btnPerm); l.addView(btnStart); setContentView(l)
+            }
+          }
+          END5
           cat > app/src/main/java/com/akhali/AkhaliService.kt << 'END4'
           package com.akhali
           import android.app.*
@@ -53,7 +84,7 @@ jobs:
               tts=TextToSpeech(this,this)
               val ch=NotificationChannel("akh","Akhali",NotificationManager.IMPORTANCE_LOW)
               (getSystemService(NOTIFICATION_SERVICE) as NotificationManager).createNotificationChannel(ch)
-              startForeground(1, Notification.Builder(this,"akh").setContentTitle("أكحلي 103 شغال").setSmallIcon(android.R.drawable.ic_btn_speak_now).build())
+              startForeground(1, Notification.Builder(this,"akh").setContentTitle("أكحلي 104 شغال").setSmallIcon(android.R.drawable.ic_btn_speak_now).build())
               val tm=getSystemService(TELEPHONY_SERVICE) as TelephonyManager
               tm.listen(object: PhoneStateListener(){ override fun onCallStateChanged(s:Int,n:String?){ if(s==TelephonyManager.CALL_STATE_RINGING){ lastCaller=n?:"مجهول"; tts.speak("المتصل $lastCaller",TextToSpeech.QUEUE_FLUSH,null,null) } } }, PhoneStateListener.LISTEN_CALL_STATE)
               startVoice()
@@ -81,12 +112,10 @@ jobs:
               var ans=""
               when{
                 q.contains("طور نفسك") -> { ans="هل تسمح لي أطور نفسي؟ قل نعم أوافق"; prefs.edit().putBoolean("wait",true).apply() }
-                q.contains("نعم") && q.contains("اوافق") && prefs.getBoolean("wait",false) -> { prefs.edit().putBoolean("wait",false).putBoolean("approved",true).apply(); ans="تمت الموافقة، قل علمتك لما أقول صباح الخير ترد صباح النور" }
+                q.contains("نعم") && q.contains("اوافق") && prefs.getBoolean("wait",false) -> { prefs.edit().putBoolean("wait",false).putBoolean("approved",true).apply(); ans="تمت الموافقة، قل علمتك لما أقول السلام ترد وعليكم السلام" }
                 q.contains("علمتك لما اقول") -> { if(!prefs.getBoolean("approved",false)){ ans="قل يا أكحلي طور نفسك أولا" } else { val cl=q.replace("علمتك لما اقول",""); val pr=cl.split("ترد"); if(pr.size==2){ custom.add("${pr[0].trim()}=>${pr[1].trim()}"); prefs.edit().putStringSet("skills",custom).apply(); ans="حفظت!" } } }
                 q.contains("من المتصل") -> ans="آخر متصل $lastCaller"
-                q.contains("ذكرني") -> { val s=prefs.getStringSet("rem", mutableSetOf())?.toMutableSet()?:mutableSetOf(); s.add(q); prefs.edit().putStringSet("rem",s).apply(); ans="حفظت التذكير" }
-                q.contains("بلوتوث") -> { ans="أفتح البلوتوث"; startActivity(Intent(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS).apply{addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)}) }
-                else -> ans="نعم؟"
+                else -> ans="نعم يا باشا؟"
               }
               tts.speak(ans,TextToSpeech.QUEUE_FLUSH,null,null)
             }
@@ -94,28 +123,11 @@ jobs:
             override fun onBind(i:Intent?):IBinder?=null
           }
           END4
-          cat > app/src/main/java/com/akhali/MainActivity.kt << 'END5'
-          package com.akhali
-          import android.app.Activity
-          import android.content.Intent
-          import android.os.Bundle
-          import android.widget.*
-          class MainActivity: Activity(){
-            override fun onCreate(b:Bundle?){
-              super.onCreate(b)
-              val l=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL; setPadding(20,20,20,20)}
-              l.addView(TextView(this).apply{text="Akhali 103 SelfDev\n\nقل: يا أكحلي طور نفسك\nثم: نعم أوافق\nثم: علمتك لما اقول السلام ترد وعليكم السلام"; textSize=16f})
-              val b1=Button(this).apply{text="شغل أكحلي"}
-              b1.setOnClickListener{ startForegroundService(Intent(this,AkhaliService::class.java)) }
-              l.addView(b1); setContentView(l)
-            }
-          }
-          END5
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: 7.6
       - run: gradle assembleDebug --no-daemon
       - uses: actions/upload-artifact@v4
         with:
-          name: Akhali-103-FIXED
+          name: Akhali-104-FIXED-BUTTON
           path: app/build/outputs/apk/debug/*.apk
