@@ -12,7 +12,6 @@ jobs:
       - name: Build
         run: |
           echo "android.useAndroidX=true" > gradle.properties
-          echo "android.enableJetifier=true" >> gradle.properties
           mkdir -p app/src/main/java/com/akhali
           mkdir -p gradle/wrapper
           echo "distributionUrl=https://services.gradle.org/distributions/gradle-7.6-bin.zip" > gradle/wrapper/gradle-wrapper.properties
@@ -23,111 +22,66 @@ jobs:
           END1
           cat > app/build.gradle << 'END2'
           plugins{ id 'com.android.application'; id 'org.jetbrains.kotlin.android' }
-          android{ namespace 'com.akhali'; compileSdk 33; defaultConfig{ applicationId "com.akhali"; minSdk 21; targetSdk 33; versionCode 104; versionName "104" }; compileOptions{ sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }; kotlinOptions{ jvmTarget='17' } }
+          android{ namespace 'com.akhali'; compileSdk 33; defaultConfig{ applicationId "com.akhali"; minSdk 21; targetSdk 33; versionCode 106; versionName "106-LT" }; compileOptions{ sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }; kotlinOptions{ jvmTarget='17' } }
           dependencies{ implementation 'androidx.core:core-ktx:1.10.1' }
           END2
           cat > app/src/main/AndroidManifest.xml << 'END3'
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.akhali">
-            <uses-permission android:name="android.permission.RECORD_AUDIO"/><uses-permission android:name="android.permission.READ_CONTACTS"/><uses-permission android:name="android.permission.READ_PHONE_STATE"/><uses-permission android:name="android.permission.ANSWER_PHONE_CALLS"/><uses-permission android:name="android.permission.FOREGROUND_SERVICE"/><uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE"/><uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-            <application android:label="Akhali 104"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity><service android:name=".AkhaliService" android:exported="false" android:foregroundServiceType="microphone"/></application>
+            <uses-permission android:name="android.permission.READ_CONTACTS"/><uses-permission android:name="android.permission.READ_PHONE_STATE"/><uses-permission android:name="android.permission.FOREGROUND_SERVICE"/><uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+            <application android:label="Akhali 106 LT"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity></application>
           </manifest>
           END3
           cat > app/src/main/java/com/akhali/MainActivity.kt << 'END5'
           package com.akhali
-          import android.Manifest
           import android.app.Activity
-          import android.content.Intent
-          import android.content.pm.PackageManager
           import android.os.Bundle
+          import android.speech.tts.TextToSpeech
           import android.widget.*
-          class MainActivity: Activity(){
+          import java.util.*
+          class MainActivity: Activity(), TextToSpeech.OnInitListener{
+            lateinit var tts: TextToSpeech
+            lateinit var prefs: android.content.SharedPreferences
+            lateinit var log: TextView
             override fun onCreate(b:Bundle?){
               super.onCreate(b)
-              val l=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL; setPadding(40,40,40,40)}
-              l.addView(TextView(this).apply{text="Akhali 104 - تم إصلاح الزر\n\n1- اضغط السماح\n2- اضغط شغل أكحلي"; textSize=18f})
-              val btnPerm=Button(this).apply{text="1- اعطني الصلاحيات أولا"}
-              val btnStart=Button(this).apply{text="2- شغل أكحلي الآن"}
-              btnPerm.setOnClickListener{
-                requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO, Manifest.permission.READ_CONTACTS, Manifest.permission.READ_PHONE_STATE, Manifest.permission.POST_NOTIFICATIONS), 1)
-                Toast.makeText(this,"اضغط سماح لكل شي",Toast.LENGTH_LONG).show()
-              }
-              btnStart.setOnClickListener{
-                try{
-                  startForegroundService(Intent(this,AkhaliService::class.java))
-                  Toast.makeText(this,"اشتغل! شوف الإشعارات فوق",Toast.LENGTH_LONG).show()
-                }catch(e:Exception){
-                  Toast.makeText(this,"خطأ: ${e.message}",Toast.LENGTH_LONG).show()
+              tts=TextToSpeech(this,this)
+              prefs=getSharedPreferences("akhali_self",0)
+              val l=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL; setPadding(20,20,20,20)}
+              log=TextView(this).apply{text="أكحلي 106 لجوالات LT\n\nاكتب تحت وقل له يا أكحلي طور نفسك\n"; textSize=16f}
+              val input=EditText(this).apply{hint="اكتب هنا: يا أكحلي طور نفسك"}
+              val btn=Button(this).apply{text="أرسل لأكحلي"}
+              val btnClear=Button(this).apply{text="مسح التدريب"}
+              btn.setOnClickListener{
+                val q=input.text.toString().lowercase()
+                var ans=""
+                val custom=prefs.getStringSet("skills", mutableSetOf())?.toMutableSet()?:mutableSetOf()
+                for(s in custom){ val pr=s.split("=>"); if(pr.size==2 && q.contains(pr[0])){ ans=pr[1]; break } }
+                if(ans==""){
+                  when{
+                    q.contains("طور نفسك") -> { ans="هل تسمح لي أطور نفسي؟ اكتب: نعم أوافق"; prefs.edit().putBoolean("wait",true).apply() }
+                    q.contains("نعم") && q.contains("اوافق") && prefs.getBoolean("wait",false) -> { prefs.edit().putBoolean("wait",false).putBoolean("approved",true).apply(); ans="تمت الموافقة ✅ الآن اكتب: علمتك لما اقول السلام ترد وعليكم السلام" }
+                    q.contains("علمتك لما اقول") -> { if(!prefs.getBoolean("approved",false)){ ans="اكتب أولا: يا أكحلي طور نفسك" } else { val cl=q.replace("علمتك لما اقول",""); val pr=cl.split("ترد"); if(pr.size==2){ custom.add("${pr[0].trim()}=>${pr[1].trim()}"); prefs.edit().putStringSet("skills",custom).apply(); ans="حفظت! ✅ الآن لو كتبت ${pr[0]} برد عليك ${pr[1]}" } } }
+                    q.contains("السلام") -> ans="وعليكم السلام يا غالي"
+                    q.contains("كيف حالك") -> ans="الحمد لله بخير يا باشا"
+                    else -> ans="ما فهمت، اكتب: يا أكحلي طور نفسك"
+                  }
                 }
+                log.text="${log.text}\n\nأنت: ${input.text}\nأكحلي: $ans"
+                tts.speak(ans,TextToSpeech.QUEUE_FLUSH,null,null)
+                input.text.clear()
               }
-              l.addView(btnPerm); l.addView(btnStart); setContentView(l)
+              btnClear.setOnClickListener{ prefs.edit().clear().apply(); log.text="تم مسح كل التدريب"; Toast.makeText(this,"تم المسح",Toast.LENGTH_SHORT).show() }
+              l.addView(log); l.addView(input); l.addView(btn); l.addView(btnClear); setContentView(l)
             }
+            override fun onInit(s:Int){ tts.language=Locale("ar") }
           }
           END5
-          cat > app/src/main/java/com/akhali/AkhaliService.kt << 'END4'
-          package com.akhali
-          import android.app.*
-          import android.content.*
-          import android.os.*
-          import android.speech.*
-          import android.speech.tts.TextToSpeech
-          import android.telephony.*
-          import java.util.*
-          class AkhaliService: Service(), TextToSpeech.OnInitListener {
-            lateinit var tts: TextToSpeech
-            var sr: SpeechRecognizer? = null
-            var lastCaller="غير معروف"
-            lateinit var prefs: SharedPreferences
-            override fun onCreate(){
-              super.onCreate()
-              prefs=getSharedPreferences("akhali_self",0)
-              tts=TextToSpeech(this,this)
-              val ch=NotificationChannel("akh","Akhali",NotificationManager.IMPORTANCE_LOW)
-              (getSystemService(NOTIFICATION_SERVICE) as NotificationManager).createNotificationChannel(ch)
-              startForeground(1, Notification.Builder(this,"akh").setContentTitle("أكحلي 104 شغال").setSmallIcon(android.R.drawable.ic_btn_speak_now).build())
-              val tm=getSystemService(TELEPHONY_SERVICE) as TelephonyManager
-              tm.listen(object: PhoneStateListener(){ override fun onCallStateChanged(s:Int,n:String?){ if(s==TelephonyManager.CALL_STATE_RINGING){ lastCaller=n?:"مجهول"; tts.speak("المتصل $lastCaller",TextToSpeech.QUEUE_FLUSH,null,null) } } }, PhoneStateListener.LISTEN_CALL_STATE)
-              startVoice()
-            }
-            fun startVoice(){
-              sr=SpeechRecognizer.createSpeechRecognizer(this)
-              sr?.setRecognitionListener(object: RecognitionListener{
-                override fun onResults(b:Bundle?){ val q=b?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.get(0)?.lowercase()?:""; handle(q); Handler(Looper.getMainLooper()).postDelayed({startVoice()},800) }
-                override fun onError(e:Int){ Handler(Looper.getMainLooper()).postDelayed({startVoice()},800) }
-                override fun onReadyForSpeech(p:Bundle?){}
-                override fun onBeginningOfSpeech(){}
-                override fun onRmsChanged(v:Float){}
-                override fun onBufferReceived(b:ByteArray?){}
-                override fun onEndOfSpeech(){}
-                override fun onEvent(t:Int,p:Bundle?){}
-                override fun onPartialResults(p:Bundle?){}
-              })
-              val i=Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply{ putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM); putExtra(RecognizerIntent.EXTRA_LANGUAGE,"ar-SA") }
-              sr?.startListening(i)
-            }
-            fun handle(q:String){
-              if(!q.contains("اكحلي")) return
-              val custom=prefs.getStringSet("skills", mutableSetOf())?: mutableSetOf()
-              for(s in custom){ val pr=s.split("=>"); if(pr.size==2 && q.contains(pr[0])){ tts.speak(pr[1],TextToSpeech.QUEUE_FLUSH,null,null); return } }
-              var ans=""
-              when{
-                q.contains("طور نفسك") -> { ans="هل تسمح لي أطور نفسي؟ قل نعم أوافق"; prefs.edit().putBoolean("wait",true).apply() }
-                q.contains("نعم") && q.contains("اوافق") && prefs.getBoolean("wait",false) -> { prefs.edit().putBoolean("wait",false).putBoolean("approved",true).apply(); ans="تمت الموافقة، قل علمتك لما أقول السلام ترد وعليكم السلام" }
-                q.contains("علمتك لما اقول") -> { if(!prefs.getBoolean("approved",false)){ ans="قل يا أكحلي طور نفسك أولا" } else { val cl=q.replace("علمتك لما اقول",""); val pr=cl.split("ترد"); if(pr.size==2){ custom.add("${pr[0].trim()}=>${pr[1].trim()}"); prefs.edit().putStringSet("skills",custom).apply(); ans="حفظت!" } } }
-                q.contains("من المتصل") -> ans="آخر متصل $lastCaller"
-                else -> ans="نعم يا باشا؟"
-              }
-              tts.speak(ans,TextToSpeech.QUEUE_FLUSH,null,null)
-            }
-            override fun onInit(s:Int){}
-            override fun onBind(i:Intent?):IBinder?=null
-          }
-          END4
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: 7.6
       - run: gradle assembleDebug --no-daemon
       - uses: actions/upload-artifact@v4
         with:
-          name: Akhali-104-FIXED-BUTTON
+          name: Akhali-106-LT-EDITION
           path: app/build/outputs/apk/debug/*.apk
