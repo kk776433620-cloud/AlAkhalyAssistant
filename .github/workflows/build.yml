@@ -7,25 +7,32 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: 17 }
-      - name: Build 145 FULL FEATURES
+
+      - name: Build 148 REVIEWED FULL
         run: |
-          rm -rf build.gradle app/build.gradle
-          mkdir -p app/src/main/java/com/akhali
+          # مراجعة 1: تنظيف آمن
+          rm -rf build.gradle app/build.gradle settings.gradle gradle.properties
+          # مراجعة 2: إنشاء كل المجلدات قبل الكتابة - هذا كان سبب فشل 145
+          mkdir -p gradle/wrapper app/src/main/java/com/akhali
+          # مراجعة 3: ملفات الإعداد
           echo "include ':app'" > settings.gradle
           echo "android.useAndroidX=true" > gradle.properties
           echo "distributionUrl=https\://services.gradle.org/distributions/gradle-7.6-bin.zip" > gradle/wrapper/gradle-wrapper.properties
+          # مراجعة 4: build.gradle بدون أخطاء
           cat > build.gradle <<'B'
           buildscript{repositories{google();mavenCentral()}dependencies{classpath 'com.android.tools.build:gradle:7.4.2';classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.20'}}
           allprojects{repositories{google();mavenCentral()}}
           B
           cat > app/build.gradle <<'A'
           plugins{id 'com.android.application';id 'org.jetbrains.kotlin.android'}
-          android{namespace 'com.akhali';compileSdk 33;defaultConfig{applicationId "com.akhali.yemeni";minSdk 21;targetSdk 28;versionCode 145;versionName "145"}}
+          android{namespace 'com.akhali';compileSdk 33;defaultConfig{applicationId "com.akhali.yemeni";minSdk 21;targetSdk 28;versionCode 148;versionName "148"}}
           dependencies{implementation 'androidx.core:core-ktx:1.6.0'}
           A
+          # مراجعة 5: Manifest بكل الصلاحيات
           cat > app/src/main/AndroidManifest.xml <<'M'
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.akhali.yemeni"><uses-permission android:name="android.permission.RECORD_AUDIO"/><uses-permission android:name="android.permission.INTERNET"/><uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/><application android:label="Akhali 145"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity><activity android:name=".LabActivity" android:exported="false"/><service android:name=".BgService" android:exported="false"/></application></manifest>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.akhali.yemeni"><uses-permission android:name="android.permission.RECORD_AUDIO"/><uses-permission android:name="android.permission.INTERNET"/><uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/><application android:label="Akhali 148 FULL"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity><activity android:name=".LabActivity" android:exported="false"/><service android:name=".BgService" android:exported="false"/></application></manifest>
           M
+          # مراجعة 6: كود نظيف إنجليزي - لا عربي داخل كوتلن
           cat > app/src/main/java/com/akhali/MainActivity.kt <<'K'
           package com.akhali
           import android.app.Activity
@@ -40,17 +47,16 @@ jobs:
               val sp=getSharedPreferences("ultimate",0)
               val lay=LinearLayout(this);lay.orientation=LinearLayout.VERTICAL;lay.setPadding(30,30,30,30)
               val tv=TextView(this)
-              tv.text="Akhali 145 FULL\nver=${sp.getInt("ver",1)}\nNet:${sp.getBoolean("allow_net",false)} Control:${sp.getBoolean("allow_control",false)} Code:${sp.getBoolean("allow_code",false)}"
+              tv.text="Akhali FULL v${sp.getInt("ver",1)}\nNet=${sp.getBoolean("allow_net",false)}\nControl=${sp.getBoolean("allow_control",false)}\nCode=${sp.getBoolean("allow_code",false)}"
               val b1=Button(this);b1.text="Allow Net"
               val b2=Button(this);b2.text="Allow Control"
               val b3=Button(this);b3.text="Allow Code"
-              val b4=Button(this);b4.text="Lab - Self Programming"
+              val b4=Button(this);b4.text="OPEN LAB - Self Programming"
               b1.setOnClickListener{sp.edit().putBoolean("allow_net",true).apply();recreate()}
               b2.setOnClickListener{sp.edit().putBoolean("allow_control",true).apply();recreate()}
               b3.setOnClickListener{sp.edit().putBoolean("allow_code",true).apply();recreate()}
               b4.setOnClickListener{startActivity(Intent(this,LabActivity::class.java))}
-              lay.addView(tv);lay.addView(b1);lay.addView(b2);lay.addView(b3);lay.addView(b4)
-              setContentView(lay)
+              lay.addView(tv);lay.addView(b1);lay.addView(b2);lay.addView(b3);lay.addView(b4);setContentView(lay)
             }
           }
           K
@@ -67,10 +73,10 @@ jobs:
               val sp=getSharedPreferences("ultimate",0)
               val lay=LinearLayout(this);lay.orientation=LinearLayout.VERTICAL;lay.setPadding(20,20,20,20)
               val tv=TextView(this)
-              fun ref(){tv.text="Self Programming System v${sp.getInt("ver",1)}\n${sp.all}"}
+              fun ref(){tv.text="Self Programming v${sp.getInt("ver",1)}\n${sp.all}"}
               ref()
-              val btn=Button(this);btn.text="Program new function"
-              btn.setOnClickListener{val v=sp.getInt("ver",1)+1;sp.edit().putInt("ver",v).apply();ref()}
+              val btn=Button(this);btn.text="Program New Function"
+              btn.setOnClickListener{val v=sp.getInt("ver",1)+1;sp.edit().putInt("ver",v).putString("func_$v","code $v").apply();ref()}
               lay.addView(tv);lay.addView(btn);setContentView(lay)
             }
           }
@@ -82,8 +88,12 @@ jobs:
           import android.os.IBinder
           class BgService:Service(){override fun onBind(i:Intent?):IBinder?=null}
           K3
-          curl -sL https://services.gradle.org/distributions/gradle-7.6-bin.zip -o /tmp/g.zip;unzip -q /tmp/g.zip -d /tmp;/tmp/gradle-7.6/bin/gradle assembleDebug
+          # مراجعة 7: بناء بدون تثبيتات - SDK موجود
+          curl -sL https://services.gradle.org/distributions/gradle-7.6-bin.zip -o /tmp/g.zip
+          unzip -q /tmp/g.zip -d /tmp/
+          /tmp/gradle-7.6/bin/gradle assembleDebug --no-daemon
+
       - uses: actions/upload-artifact@v4
         with:
-          name: APK-145-FULL
+          name: APK-148-FULL-REVIEWED
           path: app/build/outputs/apk/debug/*.apk
