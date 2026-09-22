@@ -7,32 +7,54 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: 17 }
-
-      - name: Build 148 REVIEWED FULL
+      - name: Build 150 FINAL
         run: |
-          # مراجعة 1: تنظيف آمن
-          rm -rf build.gradle app/build.gradle settings.gradle gradle.properties
-          # مراجعة 2: إنشاء كل المجلدات قبل الكتابة - هذا كان سبب فشل 145
+          rm -rf build.gradle app/build.gradle settings.gradle gradle.properties gradle
           mkdir -p gradle/wrapper app/src/main/java/com/akhali
-          # مراجعة 3: ملفات الإعداد
           echo "include ':app'" > settings.gradle
           echo "android.useAndroidX=true" > gradle.properties
           echo "distributionUrl=https\://services.gradle.org/distributions/gradle-7.6-bin.zip" > gradle/wrapper/gradle-wrapper.properties
-          # مراجعة 4: build.gradle بدون أخطاء
           cat > build.gradle <<'B'
-          buildscript{repositories{google();mavenCentral()}dependencies{classpath 'com.android.tools.build:gradle:7.4.2';classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.20'}}
-          allprojects{repositories{google();mavenCentral()}}
+          buildscript {
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+              dependencies {
+                  classpath 'com.android.tools.build:gradle:7.4.2'
+                  classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.20'
+              }
+          }
+          allprojects {
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+          }
           B
           cat > app/build.gradle <<'A'
-          plugins{id 'com.android.application';id 'org.jetbrains.kotlin.android'}
-          android{namespace 'com.akhali';compileSdk 33;defaultConfig{applicationId "com.akhali.yemeni";minSdk 21;targetSdk 28;versionCode 148;versionName "148"}}
-          dependencies{implementation 'androidx.core:core-ktx:1.6.0'}
+          plugins {
+              id 'com.android.application'
+              id 'org.jetbrains.kotlin.android'
+          }
+          android {
+              namespace 'com.akhali'
+              compileSdk 33
+              defaultConfig {
+                  applicationId "com.akhali.yemeni"
+                  minSdk 21
+                  targetSdk 28
+                  versionCode 150
+                  versionName "150"
+              }
+          }
+          dependencies {
+              implementation 'androidx.core:core-ktx:1.6.0'
+          }
           A
-          # مراجعة 5: Manifest بكل الصلاحيات
           cat > app/src/main/AndroidManifest.xml <<'M'
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.akhali.yemeni"><uses-permission android:name="android.permission.RECORD_AUDIO"/><uses-permission android:name="android.permission.INTERNET"/><uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/><application android:label="Akhali 148 FULL"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity><activity android:name=".LabActivity" android:exported="false"/><service android:name=".BgService" android:exported="false"/></application></manifest>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.akhali.yemeni"><uses-permission android:name="android.permission.RECORD_AUDIO"/><uses-permission android:name="android.permission.INTERNET"/><uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/><application android:label="Akhali 150 FULL"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity><activity android:name=".LabActivity" android:exported="false"/><service android:name=".BgService" android:exported="false"/></application></manifest>
           M
-          # مراجعة 6: كود نظيف إنجليزي - لا عربي داخل كوتلن
           cat > app/src/main/java/com/akhali/MainActivity.kt <<'K'
           package com.akhali
           import android.app.Activity
@@ -51,7 +73,7 @@ jobs:
               val b1=Button(this);b1.text="Allow Net"
               val b2=Button(this);b2.text="Allow Control"
               val b3=Button(this);b3.text="Allow Code"
-              val b4=Button(this);b4.text="OPEN LAB - Self Programming"
+              val b4=Button(this);b4.text="OPEN LAB"
               b1.setOnClickListener{sp.edit().putBoolean("allow_net",true).apply();recreate()}
               b2.setOnClickListener{sp.edit().putBoolean("allow_control",true).apply();recreate()}
               b3.setOnClickListener{sp.edit().putBoolean("allow_code",true).apply();recreate()}
@@ -88,12 +110,10 @@ jobs:
           import android.os.IBinder
           class BgService:Service(){override fun onBind(i:Intent?):IBinder?=null}
           K3
-          # مراجعة 7: بناء بدون تثبيتات - SDK موجود
           curl -sL https://services.gradle.org/distributions/gradle-7.6-bin.zip -o /tmp/g.zip
           unzip -q /tmp/g.zip -d /tmp/
           /tmp/gradle-7.6/bin/gradle assembleDebug --no-daemon
-
       - uses: actions/upload-artifact@v4
         with:
-          name: APK-148-FULL-REVIEWED
+          name: APK-150-FINAL-FULL
           path: app/build/outputs/apk/debug/*.apk
