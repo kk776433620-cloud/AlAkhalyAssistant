@@ -8,14 +8,13 @@ jobs:
       - uses: actions/setup-java@v5
         with: { java-version: '17', distribution: 'temurin' }
 
-      - name: Fix AndroidX
+      - name: Build OPENABLE APK
         run: |
-          rm -f build.gradle settings.gradle
+          rm -f build.gradle settings.gradle gradle.properties
           rm -rf app build .gradle
           mkdir -p app/src/main/java/com/alakhaly/assistant
           mkdir -p gradle/wrapper
 
-          # هذا هو الحل الناقص
           cat > gradle.properties << 'PROP'
           android.useAndroidX=true
           android.enableJetifier=true
@@ -24,9 +23,17 @@ jobs:
           cat > app/src/main/AndroidManifest.xml << 'XML'
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-            <application android:label="AlAkhaly">
-              <activity android:name=".MainActivity" android:exported="true">
-                <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+            <application 
+              android:label="AlAkhaly"
+              android:theme="@android:style/Theme.Light.NoTitleBar">
+              <activity 
+                android:name=".MainActivity" 
+                android:exported="true"
+                android:theme="@android:style/Theme.Light.NoTitleBar">
+                <intent-filter>
+                  <action android:name="android.intent.action.MAIN"/>
+                  <category android:name="android.intent.category.LAUNCHER"/>
+                </intent-filter>
               </activity>
             </application>
           </manifest>
@@ -34,16 +41,18 @@ jobs:
 
           cat > app/src/main/java/com/alakhaly/assistant/MainActivity.kt << 'KT'
           package com.alakhaly.assistant
+          import android.app.Activity
           import android.os.Bundle
-          import androidx.appcompat.app.AppCompatActivity
           import android.widget.TextView
-          class MainActivity : AppCompatActivity() {
+          import android.view.Gravity
+          class MainActivity : Activity() {
             override fun onCreate(savedInstanceState: Bundle?) {
               super.onCreate(savedInstanceState)
               val tv = TextView(this)
-              tv.text = "AlAkhaly Assistant\nتم التصليح ونجح البناء!"
+              tv.text = "AlAkhaly Assistant\n\n✅ تم التصليح!\nالتطبيق يفتح الآن بنجاح\n\nالنسخة 21"
               tv.textSize = 22f
-              tv.setPadding(50,150,50,50)
+              tv.gravity = Gravity.CENTER
+              tv.setPadding(50,200,50,50)
               setContentView(tv)
             }
           }
@@ -54,12 +63,11 @@ jobs:
           android {
             namespace 'com.alakhaly.assistant'
             compileSdk 33
-            defaultConfig { applicationId "com.alakhaly.assistant"; minSdk 21; targetSdk 33; versionCode 20; versionName "20.0" }
+            defaultConfig { applicationId "com.alakhaly.assistant"; minSdk 21; targetSdk 33; versionCode 21; versionName "21.0-OPEN" }
             compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
             kotlinOptions { jvmTarget = '17' }
           }
           dependencies {
-            implementation 'androidx.appcompat:appcompat:1.6.1'
             implementation 'androidx.core:core-ktx:1.10.1'
           }
           APP
@@ -85,4 +93,4 @@ jobs:
         with: { gradle-version: 7.6 }
       - run: gradle assembleDebug --no-daemon
       - uses: actions/upload-artifact@v4
-        with: { name: AlAkhali-APK-Final-Fixed, path: app/build/outputs/apk/debug/*.apk }
+        with: { name: AlAkhali-APK-OPEN, path: app/build/outputs/apk/debug/*.apk }
