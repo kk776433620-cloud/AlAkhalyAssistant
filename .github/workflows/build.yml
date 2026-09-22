@@ -22,14 +22,14 @@ jobs:
           END1
           cat > app/build.gradle << 'END2'
           plugins{ id 'com.android.application'; id 'org.jetbrains.kotlin.android' }
-          android{ namespace 'com.akhali'; compileSdk 33; defaultConfig{ applicationId "com.akhali"; minSdk 21; targetSdk 33; versionCode 110; versionName "110-ALWAYS" }; compileOptions{ sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }; kotlinOptions{ jvmTarget='17' } }
+          android{ namespace 'com.akhali'; compileSdk 33; defaultConfig{ applicationId "com.akhali"; minSdk 21; targetSdk 33; versionCode 111; versionName "111-DEBUG" }; compileOptions{ sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }; kotlinOptions{ jvmTarget='17' } }
           dependencies{ implementation 'androidx.core:core-ktx:1.10.1' }
           END2
           cat > app/src/main/AndroidManifest.xml << 'END3'
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.akhali">
-            <uses-permission android:name="android.permission.RECORD_AUDIO"/><uses-permission android:name="android.permission.FOREGROUND_SERVICE"/><uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE"/><uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-            <application android:label="Akhali Always"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity><service android:name=".AkhaliService" android:exported="false" android:foregroundServiceType="microphone"/></application>
+            <uses-permission android:name="android.permission.RECORD_AUDIO"/><uses-permission android:name="android.permission.FOREGROUND_SERVICE"/><uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE"/><uses-permission android:name="android.permission.POST_NOTIFICATIONS"/><uses-permission android:name="android.permission.VIBRATE"/>
+            <application android:label="Akhali 111"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity><service android:name=".AkhaliService" android:exported="false" android:foregroundServiceType="microphone"/></application>
           </manifest>
           END3
           cat > app/src/main/java/com/akhali/MainActivity.kt << 'END5'
@@ -38,25 +38,19 @@ jobs:
           import android.app.Activity
           import android.content.Intent
           import android.os.Bundle
-          import android.speech.SpeechRecognizer
           import android.widget.*
           class MainActivity: Activity(){
             override fun onCreate(b:Bundle?){
               super.onCreate(b)
               val l=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL; setPadding(30,30,30,30)}
-              val tv=TextView(this).apply{text="أكحلي 110 - يسمع بدون ضغط\n\n1- اضغط الزر تحت مرة واحدة فقط\n2- بعدها اطفي الشاشة وخلي الجوال على الطاولة\n3- قول من بعيد: يا أكحلي\n4- بيرد عليك لحاله"; textSize=18f}
-              val btn=Button(this).apply{text="شغل وضع الاستماع الدائم"}
-              val btnCheck=Button(this).apply{text="افحص هل جوالي يدعم"}
-              btnCheck.setOnClickListener{
-                if(SpeechRecognizer.isRecognitionAvailable(this)) Toast.makeText(this,"يدعم ✅ اضغط زر التشغيل",Toast.LENGTH_LONG).show()
-                else Toast.makeText(this,"لازم تنزل تطبيق Google من متجر التطبيقات",Toast.LENGTH_LONG).show()
-              }
+              val tv=TextView(this).apply{text="أكحلي 111 - يرد على أي صوت\n\nالطريقة:\n1- اضغط تشغيل\n2- لا تقل يا أكحلي، قل: هلا\n3- أو قل: سلام\n4- أو أي كلمة عربي"; textSize=18f}
+              val btn=Button(this).apply{text="شغل - بيرد على أي كلمة"}
               btn.setOnClickListener{
                 requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO, Manifest.permission.POST_NOTIFICATIONS),1)
                 startForegroundService(Intent(this,AkhaliService::class.java))
-                Toast.makeText(this,"اشتغل! الآن قول يا أكحلي بدون لمس الجوال",Toast.LENGTH_LONG).show()
+                Toast.makeText(this,"اشتغل! قل: هلا",Toast.LENGTH_LONG).show()
               }
-              l.addView(tv); l.addView(btnCheck); l.addView(btn); setContentView(l)
+              l.addView(tv); l.addView(btn); setContentView(l)
             }
           }
           END5
@@ -71,31 +65,42 @@ jobs:
           class AkhaliService: Service(), TextToSpeech.OnInitListener{
             lateinit var tts: TextToSpeech
             var sr: SpeechRecognizer?=null
+            var listening=false
             override fun onCreate(){
               super.onCreate()
               tts=TextToSpeech(this,this)
               val ch=NotificationChannel("akh","Akhali",NotificationManager.IMPORTANCE_LOW)
               (getSystemService(NOTIFICATION_SERVICE) as NotificationManager).createNotificationChannel(ch)
-              startForeground(1, Notification.Builder(this,"akh").setContentTitle("أكحلي يسمعك بدون ضغط").setContentText("قل: يا أكحلي").setSmallIcon(android.R.drawable.ic_btn_speak_now).build())
+              startForeground(1, Notification.Builder(this,"akh").setContentTitle("أكحلي 111 شغال - قل: هلا").setSmallIcon(android.R.drawable.ic_btn_speak_now).build())
             }
-            override fun onInit(s:Int){ tts.language=Locale("ar"); startListening() }
+            override fun onInit(s:Int){ tts.language=Locale("ar"); tts.setSpeechRate(1.1f); startListening() }
             fun startListening(){
+              if(listening) return
               try{
+                listening=true
                 sr?.destroy()
                 sr=SpeechRecognizer.createSpeechRecognizer(this)
                 sr?.setRecognitionListener(object: RecognitionListener{
                   override fun onResults(b:Bundle?){
+                    listening=false
                     val q=b?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.get(0)?.lowercase()?: ""
-                    if(q.contains("اكحلي")||q.contains("akhali")){
-                      var ans="نعم يا باشا؟"
-                      if(q.contains("كيف حالك")) ans="الحمد لله بخير وانت؟"
-                      else if(q.contains("كم الساعة")){ val c=Calendar.getInstance(); ans="الساعة ${c.get(Calendar.HOUR_OF_DAY)} و ${c.get(Calendar.MINUTE)}" }
-                      else if(q.contains("سلام")) ans="وعليكم السلام"
+                    var ans=""
+                    if(q.isNotEmpty()){
+                      ans = when{
+                        q.contains("هلا") -> "هلا والله يا غالي، هلا"
+                        q.contains("سلام") -> "وعليكم السلام ورحمة الله"
+                        q.contains("كيف") -> "بخير الحمد لله، انت كيفك؟"
+                        q.contains("اسمك") -> "انا أكحلي"
+                        else -> "سمعتك تقول $q، هلا بك"
+                      }
                       tts.speak(ans,TextToSpeech.QUEUE_FLUSH,null,null)
                     }
-                    Handler(Looper.getMainLooper()).postDelayed({startListening()},600)
+                    Handler(Looper.getMainLooper()).postDelayed({startListening()},800)
                   }
-                  override fun onError(e:Int){ Handler(Looper.getMainLooper()).postDelayed({startListening()},600) }
+                  override fun onError(e:Int){
+                    listening=false
+                    Handler(Looper.getMainLooper()).postDelayed({startListening()},800)
+                  }
                   override fun onReadyForSpeech(p:Bundle?){}
                   override fun onBeginningOfSpeech(){}
                   override fun onRmsChanged(v:Float){}
@@ -106,14 +111,13 @@ jobs:
                 })
                 val i=Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply{
                   putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                  putExtra(RecognizerIntent.EXTRA_LANGUAGE, "ar-SA")
-                  putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
+                  putExtra(RecognizerIntent.EXTRA_LANGUAGE, "ar")
+                  putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
                 }
                 sr?.startListening(i)
-              }catch(e:Exception){ Handler(Looper.getMainLooper()).postDelayed({startListening()},1000) }
+              }catch(e:Exception){ listening=false; Handler(Looper.getMainLooper()).postDelayed({startListening()},1000) }
             }
             override fun onBind(i:Intent?):IBinder?=null
-            override fun onDestroy(){ sr?.destroy(); super.onDestroy() }
           }
           END4
       - uses: gradle/actions/setup-gradle@v4
@@ -122,5 +126,5 @@ jobs:
       - run: gradle assembleDebug --no-daemon
       - uses: actions/upload-artifact@v4
         with:
-          name: Akhali-110-ALWAYS-LISTEN
+          name: Akhali-111-ANY-WORD
           path: app/build/outputs/apk/debug/*.apk
