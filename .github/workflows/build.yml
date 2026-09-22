@@ -1,0 +1,140 @@
+name: build-103-self-dev
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: Build 103 SelfDev
+        run: |
+          mkdir -p app/src/main/java/com/akhali
+          cat > app/src/main/java/com/akhali/AkhaliService.kt << 'EOF'
+          package com.akhali
+          import android.app.*
+          import android.content.*
+          import android.os.*
+          import android.speech.*
+          import android.speech.tts.TextToSpeech
+          import android.telephony.*
+          import java.util.*
+          class AkhaliService: Service(), TextToSpeech.OnInitListener {
+            lateinit var tts: TextToSpeech
+            var sr: SpeechRecognizer? = null
+            var lastCaller="غير معروف"
+            lateinit var prefs: SharedPreferences
+            override fun onCreate(){
+              super.onCreate()
+              prefs=getSharedPreferences("akhali_self",0)
+              tts=TextToSpeech(this,this)
+              val ch=NotificationChannel("akh103","Akhali 103",NotificationManager.IMPORTANCE_LOW)
+              (getSystemService(NOTIFICATION_SERVICE) as NotificationManager).createNotificationChannel(ch)
+              startForeground(1, Notification.Builder(this,"akh103").setContentTitle("أكحلي 103 - يطور نفسه").setSmallIcon(android.R.drawable.ic_btn_speak_now).build())
+              val tm=getSystemService(TELEPHONY_SERVICE) as TelephonyManager
+              tm.listen(object: PhoneStateListener(){ override fun onCallStateChanged(s:Int,n:String?){ if(s==TelephonyManager.CALL_STATE_RINGING){ lastCaller=n?:"مجهول"; tts.speak("المتصل $lastCaller",TextToSpeech.QUEUE_FLUSH,null,null) } } }, PhoneStateListener.LISTEN_CALL_STATE)
+              startVoice()
+            }
+            fun startVoice(){
+              sr=SpeechRecognizer.createSpeechRecognizer(this)
+              sr?.setRecognitionListener(object: RecognitionListener{
+                override fun onResults(b:Bundle?){ val q=b?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.get(0)?.lowercase()?:""; handle(q); Handler(Looper.getMainLooper()).postDelayed({startVoice()},800) }
+                override fun onError(e:Int){ Handler(Looper.getMainLooper()).postDelayed({startVoice()},800) }
+                override fun onReadyForSpeech(p:Bundle?){}
+                override fun onBeginningOfSpeech(){}
+                override fun onRmsChanged(v:Float){}
+                override fun onBufferReceived(b:ByteArray?){}
+                override fun onEndOfSpeech(){}
+                override fun onEvent(t:Int,p:Bundle?){}
+                override fun onPartialResults(p:Bundle?){}
+              })
+              val i=Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply{ putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM); putExtra(RecognizerIntent.EXTRA_LANGUAGE,"ar-SA") }
+              sr?.startListening(i)
+            }
+            fun handle(q:String){
+              if(!q.contains("اكحلي")) return
+              // نظام التعلم الذاتي
+              val custom=prefs.getStringSet("skills", mutableSetOf())?: mutableSetOf()
+              for(s in custom){ val parts=s.split("=>"); if(parts.size==2 && q.contains(parts[0])){ tts.speak(parts[1],TextToSpeech.QUEUE_FLUSH,null,null); return } }
+
+              var ans=""
+              when{
+                q.contains("طور نفسك") || q.contains("طور ذاتك") -> {
+                  ans="هل تسمح لي أطور نفسي وأضيف ميزة جديدة؟ قل نعم أوافق"
+                  prefs.edit().putBoolean("wait_approve",true).apply()
+                }
+                q.contains("نعم") && q.contains("اوافق") && prefs.getBoolean("wait_approve",false) -> {
+                  prefs.edit().putBoolean("wait_approve",false).putBoolean("self_dev_approved",true).apply()
+                  ans="تمت الموافقة. الآن علمني، قل: علمتك لما أقول كذا ترد كذا. مثال: علمتك لما أقول صباح الخير ترد صباح النور يا بطل"
+                  // هنا يقدر يطلب تحديث من جيتهب
+                  val intent=Intent(Intent.ACTION_VIEW).apply{ data=android.net.Uri.parse("https://github.com/kk776433620-cloud"); addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
+                  // ما نفتحه إلا بموافقة ثانية
+                }
+                q.startsWith("علمتك لما اقول") || q.startsWith("علمتك لما أقول") -> {
+                  if(!prefs.getBoolean("self_dev_approved",false)){ ans="لازم توافق أولاً، قل يا أكحلي طور نفسك"; }
+                  else{
+                    // صيغة: علمتك لما أقول صباح الخير ترد صباح النور
+                    val clean=q.replace("علمتك لما أقول","").replace("علمتك لما اقول","")
+                    val parts=clean.split("ترد")
+                    if(parts.size==2){ val trigger=parts[0].trim(); val response=parts[1].trim(); custom.add("$trigger=>$response"); prefs.edit().putStringSet("skills",custom).apply(); ans="حفظت! لما تقول $trigger سأرد $response. طورت نفسي بنجاح" }
+                    else ans="ما فهمت الصيغة، قل: علمتك لما أقول [كلمة] ترد [جواب]"
+                  }
+                }
+                q.contains("من المتصل") -> ans="آخر متصل $lastCaller"
+                q.contains("ذكرني") -> { val s=prefs.getStringSet("rem", mutableSetOf())?.toMutableSet()?:mutableSetOf(); s.add(q); prefs.edit().putStringSet("rem",s).apply(); ans="حفظت التذكير" }
+                q.contains("تذكيراتي") -> { val s=prefs.getStringSet("rem",null); ans=if(s.isNullOrEmpty()) "لا يوجد" else s.joinToString() }
+                q.contains("بلوتوث") -> { ans="افتح البلوتوث"; startActivity(Intent(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS).apply{addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)}) }
+                q.contains("مهاراتك") || q.contains("وش تعلمت") -> { ans=if(custom.isEmpty()) "ما تعلمت شي جديد بعد" else "تعلمت ${custom.size} مهارات: ${custom.joinToString()}" }
+                else -> ans="نعم؟"
+              }
+              tts.speak(ans,TextToSpeech.QUEUE_FLUSH,null,null)
+            }
+            override fun onInit(s:Int){}
+            override fun onBind(i:Intent?):IBinder?=null
+          }
+          EOF
+          cat > app/src/main/AndroidManifest.xml << 'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.akhali">
+            <uses-permission android:name="android.permission.RECORD_AUDIO"/><uses-permission android:name="android.permission.READ_CONTACTS"/><uses-permission android:name="android.permission.READ_PHONE_STATE"/><uses-permission android:name="android.permission.ANSWER_PHONE_CALLS"/><uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+            <application android:label="Akhali 103 SelfDev"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity><service android:name=".AkhaliService" android:exported="false"/></application>
+          </manifest>
+          EOF
+          cat > app/src/main/java/com/akhali/MainActivity.kt << 'EOF'
+          package com.akhali
+          import android.app.Activity
+          import android.content.Intent
+          import android.os.Bundle
+          import android.widget.*
+          class MainActivity: Activity(){
+            override fun onCreate(b:Bundle?){
+              super.onCreate(b)
+              val l=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL; setPadding(20,20,20,20)}
+              l.addView(TextView(this).apply{text="Akhali 103\n\nميزة التطوير الذاتي:\n1. قل: يا أكحلي طور نفسك\n2. قل: نعم أوافق\n3. قل: علمتك لما أقول صباح الخير ترد صباح النور يا غالي\n\nوسيحفظها للأبد\n\nالأوامر:\n- من المتصل\n- ذكرني\n- تذكيراتي\n- مهاراتك\n- بلوتوث"; textSize=16f})
+              val b1=Button(this).apply{text="شغل 103"}
+              b1.setOnClickListener{ startForegroundService(Intent(this,AkhaliService::class.java)) }
+              l.addView(b1); setContentView(l)
+            }
+          }
+          EOF
+          cat > app/build.gradle << 'EOF'
+          plugins{ id 'com.android.application'; id 'org.jetbrains.kotlin.android' }
+          android{ namespace 'com.akhali'; compileSdk 33; defaultConfig{ applicationId "com.akhali"; minSdk 21; targetSdk 28; versionCode 103; versionName "103-self" }; compileOptions{ sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }; kotlinOptions{ jvmTarget='17' } }
+          dependencies{ implementation 'androidx.core:core-ktx:1.10.1' }
+          EOF
+          cat > build.gradle << 'EOF'
+          buildscript{ repositories{ google(); mavenCentral() }; dependencies{ classpath 'com.android.tools.build:gradle:7.4.2'; classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.20' } }
+          allprojects{ repositories{ google(); mavenCentral() } }
+          EOF
+          echo "include ':app'" > settings.gradle
+          mkdir -p gradle/wrapper; echo "distributionUrl=https\://services.gradle.org/distributions/gradle-7.6-bin.zip" > gradle/wrapper/gradle-wrapper.properties
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 7.6
+      - run: gradle assembleDebug --no-daemon
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Akhali-103-SelfDev
+          path: app/build/outputs/apk/debug/*.apk
