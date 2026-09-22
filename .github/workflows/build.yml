@@ -4,8 +4,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
         with:
           java-version: '17'
           distribution: 'temurin'
@@ -19,7 +19,6 @@ jobs:
           [ -f "AndroidManifest.xml" ] && mv AndroidManifest.xml app/src/main/ || true
           [ -f "activity_main.xml" ] && mv activity_main.xml app/src/main/res/layout/ || true
           
-          # هذا هو الإصلاح للسطر 1
           cat > build.gradle << 'GRADLE'
           buildscript {
               repositories {
