@@ -8,31 +8,22 @@ jobs:
       - uses: actions/setup-java@v5
         with: { java-version: '17', distribution: 'temurin' }
 
-      - name: Fix root build.gradle that causes clean() error
+      - name: Fix AndroidX
         run: |
           rm -f build.gradle settings.gradle
-          rm -rf app build .gradle gradle
+          rm -rf app build .gradle
           mkdir -p app/src/main/java/com/alakhaly/assistant
           mkdir -p gradle/wrapper
 
-          cat > build.gradle << 'ROOT'
-          buildscript {
-            repositories { google(); mavenCentral() }
-            dependencies {
-              classpath 'com.android.tools.build:gradle:7.4.2'
-              classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.20'
-            }
-          }
-          allprojects { repositories { google(); mavenCentral() } }
-          ROOT
-
-          cat > settings.gradle << 'SET'
-          include ':app'
-          SET
+          # هذا هو الحل الناقص
+          cat > gradle.properties << 'PROP'
+          android.useAndroidX=true
+          android.enableJetifier=true
+          PROP
 
           cat > app/src/main/AndroidManifest.xml << 'XML'
           <?xml version="1.0" encoding="utf-8"?>
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.alakhaly.assistant">
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
             <application android:label="AlAkhaly">
               <activity android:name=".MainActivity" android:exported="true">
                 <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
@@ -50,7 +41,7 @@ jobs:
             override fun onCreate(savedInstanceState: Bundle?) {
               super.onCreate(savedInstanceState)
               val tv = TextView(this)
-              tv.text = "AlAkhaly Assistant - نجح!"
+              tv.text = "AlAkhaly Assistant\nتم التصليح ونجح البناء!"
               tv.textSize = 22f
               tv.setPadding(50,150,50,50)
               setContentView(tv)
@@ -63,7 +54,7 @@ jobs:
           android {
             namespace 'com.alakhaly.assistant'
             compileSdk 33
-            defaultConfig { applicationId "com.alakhaly.assistant"; minSdk 21; targetSdk 33; versionCode 11; versionName "11.0" }
+            defaultConfig { applicationId "com.alakhaly.assistant"; minSdk 21; targetSdk 33; versionCode 20; versionName "20.0" }
             compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
             kotlinOptions { jvmTarget = '17' }
           }
@@ -73,10 +64,25 @@ jobs:
           }
           APP
 
+          cat > build.gradle << 'ROOT'
+          buildscript {
+            repositories { google(); mavenCentral() }
+            dependencies {
+              classpath 'com.android.tools.build:gradle:7.4.2'
+              classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.20'
+            }
+          }
+          allprojects { repositories { google(); mavenCentral() } }
+          ROOT
+
+          cat > settings.gradle << 'SET'
+          include ':app'
+          SET
+
           echo "distributionUrl=https\://services.gradle.org/distributions/gradle-7.6-bin.zip" > gradle/wrapper/gradle-wrapper.properties
 
       - uses: gradle/actions/setup-gradle@v4
         with: { gradle-version: 7.6 }
       - run: gradle assembleDebug --no-daemon
       - uses: actions/upload-artifact@v4
-        with: { name: AlAkhali-APK-Fixed, path: app/build/outputs/apk/debug/*.apk }
+        with: { name: AlAkhali-APK-Final-Fixed, path: app/build/outputs/apk/debug/*.apk }
