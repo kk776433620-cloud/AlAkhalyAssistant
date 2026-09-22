@@ -6,10 +6,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 17
-      - name: Build 139 FIXED Android 9
+        with: { distribution: temurin, java-version: 17 }
+      - name: Build 140 FIXED FINAL Android 9
         run: |
           rm -rf app/build.gradle build.gradle settings.gradle gradle.properties
           mkdir -p gradle/wrapper app/src/main/java/com/akhali
@@ -29,8 +27,10 @@ jobs:
           }
           ROOT
           cat > app/build.gradle <<'APP'
-          repositories { google(); mavenCentral() }
-          plugins { id 'com.android.application'; id 'org.jetbrains.kotlin.android' }
+          plugins {
+              id 'com.android.application'
+              id 'org.jetbrains.kotlin.android'
+          }
           android {
               namespace 'com.akhali'
               compileSdk 28
@@ -38,16 +38,18 @@ jobs:
                   applicationId "com.akhali.yemeni"
                   minSdk 21
                   targetSdk 28
-                  versionCode 139
-                  versionName "139-Android9-FIXED"
+                  versionCode 140
+                  versionName "140-FIXED"
               }
           }
-          dependencies { implementation 'androidx.core:core-ktx:1.0.2' }
+          dependencies {
+              implementation 'androidx.core:core-ktx:1.0.2'
+          }
           APP
           cat > app/src/main/AndroidManifest.xml <<'MAN'
-          <?xml version="1.0" encoding="utf-8"?><manifest xmlns:android="http://schemas.android.com/apk/res/android"><uses-permission android:name="android.permission.RECORD_AUDIO"/><uses-permission android:name="android.permission.INTERNET"/><uses-permission android:name="android.permission.FOREGROUND_SERVICE"/><uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/><uses-permission android:name="android.permission.CALL_PHONE"/><application android:label="Akhali 139"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity><activity android:name=".OverlayActivity" android:exported="false" android:theme="@android:style/Theme.Translucent.NoTitleBar"/><activity android:name=".LabActivity" android:exported="false"/><activity android:name=".ResearchActivity" android:exported="false"/><service android:name=".BgService" android:exported="false"/></application></manifest>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android"><uses-permission android:name="android.permission.RECORD_AUDIO"/><uses-permission android:name="android.permission.INTERNET"/><uses-permission android:name="android.permission.FOREGROUND_SERVICE"/><uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/><application android:label="Akhali 140"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity><activity android:name=".OverlayActivity" android:exported="false" android:theme="@android:style/Theme.Translucent.NoTitleBar"/><activity android:name=".LabActivity" android:exported="false"/><activity android:name=".ResearchActivity" android:exported="false"/><service android:name=".BgService" android:exported="false"/></application></manifest>
           MAN
-          cat > app/src/main/java/com/akhali/MainActivity.kt <<'KT'
+          cat > app/src/main/java/com/akhali/MainActivity.kt <<'K'
           package com.akhali
           import android.app.Activity
           import android.content.Intent
@@ -55,26 +57,26 @@ jobs:
           import android.os.Bundle
           import android.provider.Settings
           import android.widget.*
-          class MainActivity:Activity(){override fun onCreate(b:Bundle?){super.onCreate(b);val sp=getSharedPreferences("ultimate",0);val ver=sp.getInt("code_ver",1);val l=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL;setPadding(30,30,30,30)};l.addView(TextView(this).apply{text="أكحلي 139 Android9 FIXED v$ver\nKotlin+يبرمج نفسه+يبحث+يتحكم\nنت:${if(sp.getBoolean("allow_net",false))"✅" else "❌"} تحكم:${if(sp.getBoolean("allow_control",false))"✅" else "❌"} برمجة:${if(sp.getBoolean("allow_code",false))"✅" else "❌"}";textSize=14f});val b1=Button(this).apply{text="1- السماح"};val bn=Button(this).apply{text="🌐 اسمح نت"};val bc=Button(this).apply{text="📱 اسمح تحكم"};val bcd=Button(this).apply{text="💻 اسمح برمجة"};val bl=Button(this).apply{text="🔬 المختبر"};val b2=Button(this).apply{text="2- شغل"};b1.setOnClickListener{startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,Uri.parse("package:$packageName")))};bn.setOnClickListener{sp.edit().putBoolean("allow_net",true).apply();recreate()};bc.setOnClickListener{sp.edit().putBoolean("allow_control",true).apply();recreate()};bcd.setOnClickListener{sp.edit().putBoolean("allow_code",true).apply();recreate()};bl.setOnClickListener{startActivity(Intent(this,LabActivity::class.java))};b2.setOnClickListener{requestPermissions(arrayOf(android.Manifest.permission.RECORD_AUDIO),1);startService(Intent(this,BgService::class.java))};l.addView(b1);l.addView(bn);l.addView(bc);l.addView(bcd);l.addView(bl);l.addView(b2);setContentView(l)}}
-          KT
-          cat > app/src/main/java/com/akhali/LabActivity.kt <<'KT2'
+          class MainActivity:Activity(){override fun onCreate(b:Bundle?){super.onCreate(b);val sp=getSharedPreferences("ultimate",0);val l=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL;setPadding(30,30,30,30)};l.addView(TextView(this).apply{text="أكحلي 140 Android9 FIXED v${sp.getInt("code_ver",1)}\nKotlin+يبرمج نفسه+يبحث+يتحكم\nنت:${if(sp.getBoolean("allow_net",false))"✅" else "❌"} تحكم:${if(sp.getBoolean("allow_control",false))"✅" else "❌"} برمجة:${if(sp.getBoolean("allow_code",false))"✅" else "❌"}";textSize=14f});val b1=Button(this).apply{text="1- السماح"};val bn=Button(this).apply{text="🌐 اسمح نت ويتعلم؟"};val bc=Button(this).apply{text="📱 اسمح يتحكم كامل؟"};val bcd=Button(this).apply{text="💻 اسمح يبرمج نفسه؟"};val bl=Button(this).apply{text="🔬 مختبر البرمجة الذاتية - النظام البرمجي"};val b2=Button(this).apply{text="2- شغل ULTIMATE"};b1.setOnClickListener{startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,Uri.parse("package:$packageName")))};bn.setOnClickListener{sp.edit().putBoolean("allow_net",true).apply();recreate()};bc.setOnClickListener{sp.edit().putBoolean("allow_control",true).apply();recreate()};bcd.setOnClickListener{sp.edit().putBoolean("allow_code",true).apply();recreate()};bl.setOnClickListener{startActivity(Intent(this,LabActivity::class.java))};b2.setOnClickListener{requestPermissions(arrayOf(android.Manifest.permission.RECORD_AUDIO),1);startService(Intent(this,BgService::class.java))};l.addView(b1);l.addView(bn);l.addView(bc);l.addView(bcd);l.addView(bl);l.addView(b2);setContentView(l)}}
+          K
+          cat > app/src/main/java/com/akhali/LabActivity.kt <<'K2'
           package com.akhali
           import android.app.Activity
           import android.graphics.Color
           import android.os.Bundle
           import android.widget.*
-          class LabActivity:Activity(){override fun onCreate(b:Bundle?){super.onCreate(b);val sp=getSharedPreferences("ultimate",0);val r=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL;setPadding(20,20,20,20);setBackgroundColor(Color.parseColor("#FF0D1117"))};r.addView(TextView(this).apply{text="🔬 مختبر - Kotlin\n";setTextColor(Color.WHITE);textSize=16f});val log=TextView(this).apply{setTextColor(Color.GREEN);setBackgroundColor(Color.BLACK);setPadding(10,10,10,10);textSize=11f};fun ref(){val v=sp.getInt("code_ver",1);log.text="v$v\n${sp.all.filterKeys{it.startsWith("func_")}.entries.joinToString("\n"){it.key+"="+it.value}}"};ref();val btn=Button(this).apply{text="⚡ برمج"};btn.setOnClickListener{val v=sp.getInt("code_ver",1)+1;val c=listOf("fun reply()=أرحب","fun control()=أتحكم","fun search()=أبحث").random();sp.edit().putInt("code_ver",v).putString("func_$v",c).apply();ref()};r.addView(log);r.addView(btn);setContentView(r)}}
-          KT2
-          cat > app/src/main/java/com/akhali/ResearchActivity.kt <<'KT3'
+          class LabActivity:Activity(){override fun onCreate(b:Bundle?){super.onCreate(b);val sp=getSharedPreferences("ultimate",0);val r=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL;setPadding(20,20,20,20);setBackgroundColor(Color.parseColor("#FF0D1117"))};r.addView(TextView(this).apply{text="🔬 مختبر البرمجة الذاتية - النظام البرمجي\nKotlin حديثة لأندرويد 9\n";setTextColor(Color.WHITE);textSize=16f});val log=TextView(this).apply{setTextColor(Color.GREEN);setBackgroundColor(Color.BLACK);setPadding(10,10,10,10);textSize=11f};fun ref(){val v=sp.getInt("code_ver",1);log.text="نظام برمجي v$v\nKotlin 1.8.20\n${sp.all.filterKeys{it.startsWith("func_")}.entries.joinToString("\n"){it.key+"="+it.value}}\nآخر كود: ${sp.getString("last_code","")}"};ref();val btn=Button(this).apply{text="⚡ برمج دالة جديدة بموافقتك"};btn.setOnClickListener{val v=sp.getInt("code_ver",1)+1;val c=listOf("fun reply_yemeni_aseel()=أرحب يا حيد أخوك","fun control_phone_full()=أتحكم بجوالك كامل بامرك","fun search_and_learn_net()=أفتح النت وأقوم ببحوث وأتعلم").random();sp.edit().putInt("code_ver",v).putString("func_$v",c).putString("last_code",c).apply();ref()};r.addView(log);r.addView(btn);setContentView(r)}}
+          K2
+          cat > app/src/main/java/com/akhali/ResearchActivity.kt <<'K3'
           package com.akhali
           import android.app.Activity
           import android.os.Bundle
           import android.webkit.WebView
           import android.webkit.WebViewClient
           import android.widget.*
-          class ResearchActivity:Activity(){override fun onCreate(b:Bundle?){super.onCreate(b);val q=intent.getStringExtra("q")?:"yemeni";val l=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL};l.addView(TextView(this).apply{text="🔍 يبحث: $q";setPadding(20,20,20,20)});val w=WebView(this);w.webViewClient=WebViewClient();w.settings.javaScriptEnabled=true;w.loadUrl("https://www.google.com/search?q=$q");l.addView(w);setContentView(l)}}
-          KT3
-          cat > app/src/main/java/com/akhali/BgService.kt <<'KT4'
+          class ResearchActivity:Activity(){override fun onCreate(b:Bundle?){super.onCreate(b);val q=intent.getStringExtra("q")?:"yemeni";val l=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL};l.addView(TextView(this).apply{text="🔍 يبحث ويتعلم: $q";setPadding(20,20,20,20)});val w=WebView(this);w.webViewClient=WebViewClient();w.settings.javaScriptEnabled=true;w.loadUrl("https://www.google.com/search?q=$q");l.addView(w);setContentView(l)}}
+          K3
+          cat > app/src/main/java/com/akhali/BgService.kt <<'K4'
           package com.akhali
           import android.app.*
           import android.content.*
@@ -82,9 +84,9 @@ jobs:
           import android.speech.*
           import android.speech.tts.TextToSpeech
           import java.util.*
-          class BgService:Service(),TextToSpeech.OnInitListener{lateinit var tts:TextToSpeech;var sr:SpeechRecognizer?=null;var listening=false;override fun onCreate(){super.onCreate();tts=TextToSpeech(this,this);val ch=NotificationChannel("akh","Akhali",NotificationManager.IMPORTANCE_LOW);(getSystemService(NOTIFICATION_SERVICE) as NotificationManager).createNotificationChannel(ch);startForeground(1,Notification.Builder(this,"akh").setContentTitle("Akhali 139").setContentText("ULTIMATE").setSmallIcon(android.R.drawable.ic_btn_speak_now).build())};override fun onInit(i:Int){tts.language=Locale("ar");startListen()};fun startListen(){if(listening)return;try{listening=true;sr?.destroy();sr=SpeechRecognizer.createSpeechRecognizer(this);sr?.setRecognitionListener(object:RecognitionListener{override fun onResults(b:Bundle?){listening=false;val q=b?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.get(0)?.lowercase()?:"";if(q.length>2){val i=Intent(this@BgService,OverlayActivity::class.java).apply{putExtra("q",q);addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)};startActivity(i)};Handler(Looper.getMainLooper()).postDelayed({startListen()},600)};override fun onError(e:Int){listening=false;Handler(Looper.getMainLooper()).postDelayed({startListen()},600)};override fun onReadyForSpeech(p:Bundle?){};override fun onBeginningOfSpeech(){};override fun onRmsChanged(f:Float){};override fun onBufferReceived(b:ByteArray?){};override fun onEndOfSpeech(){};override fun onEvent(t:Int,p:Bundle?){};override fun onPartialResults(p:Bundle?){}});sr?.startListening(Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply{putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);putExtra(RecognizerIntent.EXTRA_LANGUAGE,"ar-YE")})}catch(e:Exception){listening=false;Handler(Looper.getMainLooper()).postDelayed({startListen()},800)}};override fun onBind(i:Intent?):IBinder?=null}
-          KT4
-          cat > app/src/main/java/com/akhali/OverlayActivity.kt <<'KT5'
+          class BgService:Service(),TextToSpeech.OnInitListener{lateinit var tts:TextToSpeech;var sr:SpeechRecognizer?=null;var listening=false;override fun onCreate(){super.onCreate();tts=TextToSpeech(this,this);val ch=NotificationChannel("akh","Akhali",NotificationManager.IMPORTANCE_LOW);(getSystemService(NOTIFICATION_SERVICE) as NotificationManager).createNotificationChannel(ch);startForeground(1,Notification.Builder(this,"akh").setContentTitle("Akhali 140").setContentText("ULTIMATE").setSmallIcon(android.R.drawable.ic_btn_speak_now).build())};override fun onInit(i:Int){tts.language=Locale("ar");startListen()};fun startListen(){if(listening)return;try{listening=true;sr?.destroy();sr=SpeechRecognizer.createSpeechRecognizer(this);sr?.setRecognitionListener(object:RecognitionListener{override fun onResults(b:Bundle?){listening=false;val q=b?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.get(0)?.lowercase()?:"";if(q.length>2){val i=Intent(this@BgService,OverlayActivity::class.java).apply{putExtra("q",q);addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)};startActivity(i)};Handler(Looper.getMainLooper()).postDelayed({startListen()},600)};override fun onError(e:Int){listening=false;Handler(Looper.getMainLooper()).postDelayed({startListen()},600)};override fun onReadyForSpeech(p:Bundle?){};override fun onBeginningOfSpeech(){};override fun onRmsChanged(f:Float){};override fun onBufferReceived(b:ByteArray?){};override fun onEndOfSpeech(){};override fun onEvent(t:Int,p:Bundle?){};override fun onPartialResults(p:Bundle?){}});sr?.startListening(Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply{putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);putExtra(RecognizerIntent.EXTRA_LANGUAGE,"ar-YE")})}catch(e:Exception){listening=false;Handler(Looper.getMainLooper()).postDelayed({startListen()},800)}};override fun onBind(i:Intent?):IBinder?=null}
+          K4
+          cat > app/src/main/java/com/akhali/OverlayActivity.kt <<'K5'
           package com.akhali
           import android.app.Activity
           import android.content.Intent
@@ -94,8 +96,8 @@ jobs:
           import android.speech.tts.TextToSpeech
           import android.view.Gravity
           import android.widget.*
-          class OverlayActivity:Activity(),TextToSpeech.OnInitListener{lateinit var tts:TextToSpeech;var q="";override fun onCreate(b:Bundle?){super.onCreate(b);tts=TextToSpeech(this,this);q=intent.getStringExtra("q")?:"";val sp=getSharedPreferences("ultimate",0);val root=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL;gravity=Gravity.CENTER;setPadding(35,35,35,35);setBackgroundColor(Color.parseColor("#EE000000"))};root.addView(TextView(this).apply{text="v${sp.getInt("code_ver",1)} | $q";textSize=10f;setTextColor(Color.CYAN);gravity=Gravity.CENTER});val an=sp.getBoolean("allow_net",false);val ac=sp.getBoolean("allow_control",false);val acd=sp.getBoolean("allow_code",false);when{(q.contains("ابحث")||q.contains("تعلم"))&&!an->{root.addView(TextView(this).apply{text="\n🌐 تسمح لي أفتح النت؟";textSize=16f;setTextColor(Color.WHITE);gravity=Gravity.CENTER});val b=Button(this).apply{text="✅ ايه"};b.setOnClickListener{sp.edit().putBoolean("allow_net",true).apply();startActivity(Intent(this,ResearchActivity::class.java).apply{putExtra("q",q)});finish()};root.addView(b)};(q.contains("افتح")||q.contains("تحكم"))&&!ac->{root.addView(TextView(this).apply{text="\n📱 تسمح لي أتحكم؟";textSize=16f;setTextColor(Color.WHITE);gravity=Gravity.CENTER});val b=Button(this).apply{text="✅ ايه"};b.setOnClickListener{sp.edit().putBoolean("allow_control",true).apply();handleControl(q);finish()};root.addView(b)};q.contains("برمج")&&!acd->{root.addView(TextView(this).apply{text="\n💻 تسمح لي أبرمج؟";textSize=16f;setTextColor(Color.WHITE);gravity=Gravity.CENTER});val b=Button(this).apply{text="✅ ايه"};b.setOnClickListener{sp.edit().putBoolean("allow_code",true).apply();val v=sp.getInt("code_ver",1)+1;sp.edit().putInt("code_ver",v).apply();finish()};root.addView(b)};else->{var r="أرحب!";if(q.contains("ابحث")&&an){r="أبشر بافتح النت!";startActivity(Intent(this,ResearchActivity::class.java).apply{putExtra("q",q)})}else if((q.contains("افتح")||q.contains("شغل"))&&ac){r="حاضر أتحكم!";handleControl(q)}else if(q.contains("برمج")&&acd){val v=sp.getInt("code_ver",1)+1;sp.edit().putInt("code_ver",v).apply();r="برمجت نفسي v$v!"};root.addView(TextView(this).apply{text="\n$r";textSize=18f;setTextColor(Color.YELLOW);gravity=Gravity.CENTER});Handler(Looper.getMainLooper()).postDelayed({finish()},4000)}};setContentView(root)};fun handleControl(c:String){try{when{c.contains("واتس")->startActivity(packageManager.getLaunchIntentForPackage("com.whatsapp"));c.contains("يوتيوب")->startActivity(packageManager.getLaunchIntentForPackage("com.google.android.youtube"));c.contains("كاميرا")->startActivity(Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE));c.contains("واي فاي")->startActivity(Intent(Settings.ACTION_WIFI_SETTINGS))}}catch(e:Exception){}};override fun onInit(i:Int){tts.language=Locale("ar");tts.speak("أرحب",TextToSpeech.QUEUE_FLUSH,null,null)}}
-          KT5
+          class OverlayActivity:Activity(),TextToSpeech.OnInitListener{lateinit var tts:TextToSpeech;var q="";override fun onCreate(b:Bundle?){super.onCreate(b);tts=TextToSpeech(this,this);q=intent.getStringExtra("q")?:"";val sp=getSharedPreferences("ultimate",0);val root=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL;gravity=Gravity.CENTER;setPadding(35,35,35,35);setBackgroundColor(Color.parseColor("#EE000000"))};root.addView(TextView(this).apply{text="v${sp.getInt("code_ver",1)} | $q";textSize=10f;setTextColor(Color.CYAN);gravity=Gravity.CENTER});val an=sp.getBoolean("allow_net",false);val ac=sp.getBoolean("allow_control",false);val acd=sp.getBoolean("allow_code",false);when{(q.contains("ابحث")||q.contains("تعلم"))&&!an->{root.addView(TextView(this).apply{text="\n🌐 تسمح لي أفتح النت وأتعلم؟";textSize=16f;setTextColor(Color.WHITE);gravity=Gravity.CENTER});val b=Button(this).apply{text="✅ ايه"};b.setOnClickListener{sp.edit().putBoolean("allow_net",true).apply();startActivity(Intent(this,ResearchActivity::class.java).apply{putExtra("q",q)});finish()};root.addView(b)};(q.contains("افتح")||q.contains("تحكم"))&&!ac->{root.addView(TextView(this).apply{text="\n📱 تسمح لي أتحكم؟";textSize=16f;setTextColor(Color.WHITE);gravity=Gravity.CENTER});val b=Button(this).apply{text="✅ ايه"};b.setOnClickListener{sp.edit().putBoolean("allow_control",true).apply();handleControl(q);finish()};root.addView(b)};q.contains("برمج")&&!acd->{root.addView(TextView(this).apply{text="\n💻 تسمح لي أبرمج؟";textSize=16f;setTextColor(Color.WHITE);gravity=Gravity.CENTER});val b=Button(this).apply{text="✅ ايه"};b.setOnClickListener{sp.edit().putBoolean("allow_code",true).apply();val v=sp.getInt("code_ver",1)+1;sp.edit().putInt("code_ver",v).apply();finish()};root.addView(b)};else->{var r="أرحب!";if(q.contains("ابحث")&&an){r="أبشر بافتح النت!";startActivity(Intent(this,ResearchActivity::class.java).apply{putExtra("q",q)})}else if((q.contains("افتح")||q.contains("شغل"))&&ac){r="حاضر أتحكم!";handleControl(q)}else if(q.contains("برمج")&&acd){val v=sp.getInt("code_ver",1)+1;sp.edit().putInt("code_ver",v).apply();r="برمجت نفسي v$v!"};root.addView(TextView(this).apply{text="\n$r";textSize=18f;setTextColor(Color.YELLOW);gravity=Gravity.CENTER});Handler(Looper.getMainLooper()).postDelayed({finish()},4000)}};setContentView(root)};fun handleControl(c:String){try{when{c.contains("واتس")->startActivity(packageManager.getLaunchIntentForPackage("com.whatsapp"));c.contains("يوتيوب")->startActivity(packageManager.getLaunchIntentForPackage("com.google.android.youtube"));c.contains("كاميرا")->startActivity(Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE));c.contains("واي فاي")->startActivity(Intent(Settings.ACTION_WIFI_SETTINGS))}}catch(e:Exception){}};override fun onInit(i:Int){tts.language=Locale("ar");tts.speak("أرحب",TextToSpeech.QUEUE_FLUSH,null,null)}}
+          K5
           curl -sL https://services.gradle.org/distributions/gradle-7.6-bin.zip -o /tmp/g.zip
           unzip -q /tmp/g.zip -d /tmp/
           /tmp/gradle-7.6/bin/gradle assembleDebug --no-daemon
@@ -103,5 +105,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Akhali-139-Android9-APK
+          name: Akhali-140-Android9-APK
           path: app/build/outputs/apk/debug/*.apk
