@@ -1,25 +1,79 @@
-name: Build AlAkhali APK
-
-on: [push]
-
+name: Build APK - Auto Fix
+on: [push, workflow_dispatch]
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
+      - uses: actions/setup-android@v3
 
-      - name: Build APK
-        run: gradle assembleDebug
+      - name: Rebuild Project Structure
+        run: |
+          echo "=== Before ==="
+          ls -la
+          # انشاء الهيكلة الصحيحة
+          mkdir -p app/src/main/java/com/alakhaly/assistant
+          mkdir -p app/src/main/res/layout
+          mkdir -p gradle/wrapper
+          
+          # نقل ملفات الكوتلن
+          mv *.kt app/src/main/java/com/alakhaly/assistant/ || true
+          mv *.KT app/src/main/java/com/alakhaly/assistant/ || true
+          
+          # نقل الواجهات
+          [ -f "AndroidManifest.xml" ] && mv AndroidManifest.xml app/src/main/ || true
+          [ -f "activity_main.xml" ] && mv activity_main.xml app/src/main/res/layout/ || true
+          [ -f "*.xml" ] && mv *.xml app/src/main/res/layout/ || true
+          
+          # اذا الـ Manifest مش موجود ننشأ واحد جديد
+          if [ ! -f "app/src/main/AndroidManifest.xml" ]; then
+          cat > app/src/main/AndroidManifest.xml << 'MANI'
+          <?xml version="1.0" encoding="utf-8"?>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+              <application android:allowBackup="true" android:label="AlAkhaly Assistant">
+                  <activity android:name=".MainActivity" android:exported="true">
+                      <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+                  </activity>
+              </application>
+          </manifest>
+          MANI
+          fi
+          
+          # انشاء build.gradle للمشروع
+          cat > build.gradle << 'GRADLE'
+          buildscript { dependencies { classpath 'com.android.tools.build:gradle:8.1.4' classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.10' } }
+          task clean(type: Delete) { delete rootProject.buildDir }
+          GRADLE
+          
+          cat > settings.gradle << 'SET'
+          include ':app'
+          SET
+          
+          cat > app/build.gradle << 'APP'
+          plugins { id 'com.android.application' id 'kotlin-android' }
+          android { namespace 'com.alakhaly.assistant' compileSdk 34 defaultConfig { applicationId "com.alakhaly.assistant" minSdk 24 targetSdk 34 versionCode 1 versionName "1.0" } }
+          dependencies { implementation 'androidx.core:core-ktx:1.12.0' implementation 'androidx.appcompat:appcompat:1.6.1' }
+          APP
+          
+          cat > gradle/wrapper/gradle-wrapper.properties << 'PROP'
+          distributionUrl=https\://services.gradle.org/distributions/gradle-8.5-bin.zip
+          PROP
+          
+          echo "=== After ==="
+          find . -type f | head -n 50
+
+      - name: Build with Gradle
+        uses: gradle/gradle-build-action@v3
+        with:
+          gradle-version: 8.5
+          arguments: assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: AlAkhalyAssistant-APK
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: AlAkhali-APK-Fixed
+          path: app/build/outputs/apk/debug/*.apk
