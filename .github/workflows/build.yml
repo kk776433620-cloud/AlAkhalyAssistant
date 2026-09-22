@@ -15,35 +15,40 @@ jobs:
           mkdir -p app/src/main/java/com/alakhaly/assistant
           mkdir -p app/src/main/res/layout
           mkdir -p gradle/wrapper
-          mv *.kt app/src/main/java/com/alakhaly/assistant/ 2>/dev/null || true
-          [ -f "AndroidManifest.xml" ] && mv AndroidManifest.xml app/src/main/ || true
-          [ -f "activity_main.xml" ] && mv activity_main.xml app/src/main/res/layout/ || true
+          rm -f gradle.properties app/gradle.properties
+
+          echo "org.gradle.jvmargs=-Xmx2g
+          android.useAndroidX=true
+          android.enableJetifier=true" > gradle.properties
           
-          cat > build.gradle << 'GRADLE'
-          buildscript {
-              repositories {
-                  google()
-                  mavenCentral()
-              }
-              dependencies {
-                  classpath 'com.android.tools.build:gradle:8.1.4'
-                  classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.10'
-              }
-          }
-          allprojects {
-              repositories {
-                  google()
-                  mavenCentral()
-              }
-          }
-          task clean(type: Delete) {
-              delete rootProject.buildDir
-          }
-          GRADLE
+          echo "org.gradle.jvmargs=-Xmx2g
+          android.useAndroidX=true
+          android.enableJetifier=true" > app/gradle.properties
+
+          echo "distributionUrl=https\://services.gradle.org/distributions/gradle-8.5-bin.zip" > gradle/wrapper/gradle-wrapper.properties
           
-          echo "include ':app'" > settings.gradle
-          
-          cat > app/build.gradle << 'APP'
+          cat gradle.properties
+          cat app/gradle.properties
+
+          cat > settings.gradle << 'EOF'
+          pluginManagement {
+              repositories { google(); mavenCentral(); gradlePluginPortal() }
+          }
+          dependencyResolutionManagement {
+              repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+              repositories { google(); mavenCentral() }
+          }
+          include ':app'
+          EOF
+
+          cat > build.gradle << 'EOF'
+          plugins {
+              id 'com.android.application' version '8.1.4' apply false
+              id 'org.jetbrains.kotlin.android' version '1.9.10' apply false
+          }
+          EOF
+
+          cat > app/build.gradle << 'EOF'
           plugins {
               id 'com.android.application'
               id 'org.jetbrains.kotlin.android'
@@ -63,12 +68,43 @@ jobs:
               implementation 'androidx.core:core-ktx:1.12.0'
               implementation 'androidx.appcompat:appcompat:1.6.1'
           }
-          APP
-          
-          echo "distributionUrl=https\://services.gradle.org/distributions/gradle-8.5-bin.zip" > gradle/wrapper/gradle-wrapper.properties
+          EOF
 
-      - name: Setup Gradle v4
-        uses: gradle/actions/setup-gradle@v4
+          cat > app/src/main/AndroidManifest.xml << 'EOF'
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+              <application android:label="AlAkhali">
+                  <activity android:name=".MainActivity" android:exported="true">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN"/>
+                          <category android:name="android.intent.category.LAUNCHER"/>
+                      </intent-filter>
+                  </activity>
+              </application>
+          </manifest>
+          EOF
+
+          cat > app/src/main/res/layout/activity_main.xml << 'EOF'
+          <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent" android:layout_height="match_parent"
+              android:gravity="center" android:orientation="vertical">
+              <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                  android:text="Works!" android:textSize="22sp"/>
+          </LinearLayout>
+          EOF
+
+          cat > app/src/main/java/com/alakhaly/assistant/MainActivity.kt << 'EOF'
+          package com.alakhaly.assistant
+          import android.os.Bundle
+          import androidx.appcompat.app.AppCompatActivity
+          class MainActivity : AppCompatActivity() {
+              override fun onCreate(savedInstanceState: Bundle?) {
+                  super.onCreate(savedInstanceState)
+                  setContentView(R.layout.activity_main)
+              }
+          }
+          EOF
+
+      - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: 8.5
 
