@@ -9,54 +9,38 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-      - name: Build APK
+      - name: إنشاء ملف APK
         run: |
+          mkdir -p gradle/wrapper
           echo "android.useAndroidX=true" > gradle.properties
+          echo "distributionUrl=https://services.gradle.org/distributions/gradle-7.6-bin.zip" > gradle/wrapper/gradle-wrapper.properties
           mkdir -p app/src/main/java/com/akhali
           echo "include ':app'" > settings.gradle
-          echo "distributionUrl=https://services.gradle.org/distributions/gradle-7.6-bin.zip" > gradle/wrapper/gradle-wrapper.properties
-          mkdir -p gradle/wrapper
           cat > build.gradle <<'G1'
           buildscript{repositories{google();mavenCentral()} dependencies{classpath 'com.android.tools.build:gradle:7.4.2'; classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.20'}}
           allprojects{repositories{google();mavenCentral()}}
           G1
           cat > app/build.gradle <<'G2'
           plugins{id 'com.android.application'; id 'org.jetbrains.kotlin.android'}
-          android{namespace 'com.akhali'; compileSdk 33; defaultConfig{applicationId "com.akhali"; minSdk 21; targetSdk 33; versionCode 117; versionName "117-ICON"} compileOptions{sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17} kotlinOptions{jvmTarget='17'}}
+          android{namespace 'com.akhali'; compileSdk 33; defaultConfig{applicationId "com.akhali"; minSdk 21; targetSdk 33; versionCode 119; versionName "119-YEMENI"} compileOptions{sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17} kotlinOptions{jvmTarget='17'}}
           dependencies{implementation 'androidx.core:core-ktx:1.10.1'}
           G2
           cat > app/src/main/AndroidManifest.xml <<'M'
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
             <uses-permission android:name="android.permission.RECORD_AUDIO"/><uses-permission android:name="android.permission.FOREGROUND_SERVICE"/><uses-permission android:name="android.permission.POST_NOTIFICATIONS"/><uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
-            <application android:label="Akhali BG">
-              <activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity>
-              <activity android:name=".OverlayActivity" android:exported="false" android:theme="@android:style/Theme.Translucent.NoTitleBar"/>
-              <service android:name=".BgService" android:exported="false" android:foregroundServiceType="microphone"/>
-            </application>
+            <application android:label="Akhali BG"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity><activity android:name=".OverlayActivity" android:exported="false" android:theme="@android:style/Theme.Translucent.NoTitleBar"/><service android:name=".BgService" android:exported="false" android:foregroundServiceType="microphone"/></application>
           </manifest>
           M
           cat > app/src/main/java/com/akhali/MainActivity.kt <<'K1'
           package com.akhali
-          import android.Manifest
           import android.app.Activity
           import android.content.Intent
           import android.net.Uri
           import android.os.Bundle
           import android.provider.Settings
           import android.widget.*
-          class MainActivity: Activity(){
-            override fun onCreate(b:Bundle?){
-              super.onCreate(b)
-              val l=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL; setPadding(40,40,40,40)}
-              val tv=TextView(this).apply{text="أكحلي 117 - فيه أيقونة\n1- زر 1: فوق التطبيقات\n2- زر 2: شغل الخلفية"; textSize=18f}
-              val b1=Button(this).apply{text="1- السماح فوق التطبيقات"}
-              val b2=Button(this).apply{text="2- شغل الخلفية"}
-              b1.setOnClickListener{startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")))}
-              b2.setOnClickListener{requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO),1); startForegroundService(Intent(this,BgService::class.java)); Toast.makeText(this,"شغال! قل يا أكحلي",1).show()}
-              l.addView(tv); l.addView(b1); l.addView(b2); setContentView(l)
-            }
-          }
+          class MainActivity: Activity(){override fun onCreate(b:Bundle?){super.onCreate(b); val l=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL; setPadding(40,40,40,40)}; val tv=TextView(this).apply{text="أكحلي 119 - يمني أصلي 🇾🇪\n\nيفهم:\nيا أكحلي وينك\nيا أكحلي ايش في\nيا أكحلي تعال\nيا أكحلي شلني\nقفل\nافتح"; textSize=16f}; val b1=Button(this).apply{text="1- السماح فوق التطبيقات"}; val b2=Button(this).apply{text="2- شغل اللهجة اليمنية 🇾🇪"}; b1.setOnClickListener{startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")))}; b2.setOnClickListener{requestPermissions(arrayOf(android.Manifest.permission.RECORD_AUDIO),1); startForegroundService(Intent(this,BgService::class.java)); Toast.makeText(this,"تم! يهدر يمني الآن",1).show()}; l.addView(tv); l.addView(b1); l.addView(b2); setContentView(l)}}
           K1
           cat > app/src/main/java/com/akhali/BgService.kt <<'K2'
           package com.akhali
@@ -66,81 +50,7 @@ jobs:
           import android.speech.*
           import android.speech.tts.TextToSpeech
           import java.util.*
-          class BgService: Service(), TextToSpeech.OnInitListener{
-            lateinit var tts: TextToSpeech
-            var sr: SpeechRecognizer?=null
-            var listening=false
-            override fun onCreate(){
-              super.onCreate()
-              tts=TextToSpeech(this,this)
-              val ch=NotificationChannel("akh","Akhali",NotificationManager.IMPORTANCE_LOW)
-              (getSystemService(NOTIFICATION_SERVICE) as NotificationManager).createNotificationChannel(ch)
-              startForeground(1, Notification.Builder(this,"akh").setContentTitle("أكحلي شغال").setContentText("قل يا أكحلي").setSmallIcon(android.R.drawable.ic_btn_speak_now).build())
-            }
-            override fun onInit(i:Int){tts.language=Locale("ar"); startListen()}
-            fun startListen(){
-              if(listening) return
-              try{
-                listening=true; sr?.destroy(); sr=SpeechRecognizer.createSpeechRecognizer(this)
-                sr?.setRecognitionListener(object: RecognitionListener{
-                  override fun onResults(b:Bundle?){
-                    listening=false
-                    val q=b?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.get(0)?.lowercase()?:""
-                    if(q.contains("اكحلي")||q.contains("akhali")){val i=Intent(this@BgService, OverlayActivity::class.java).apply{putExtra("q",q); addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)}; startActivity(i)}
-                    Handler(Looper.getMainLooper()).postDelayed({startListen()},800)
-                  }
-                  override fun onError(e:Int){listening=false; Handler(Looper.getMainLooper()).postDelayed({startListen()},800)}
-                  override fun onReadyForSpeech(p:Bundle?){}
-                  override fun onBeginningOfSpeech(){}
-                  override fun onRmsChanged(f:Float){}
-                  override fun onBufferReceived(b:ByteArray?){}
-                  override fun onEndOfSpeech(){}
-                  override fun onEvent(t:Int,p:Bundle?){}
-                  override fun onPartialResults(p:Bundle?){}
-                })
-                sr?.startListening(Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply{putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM); putExtra(RecognizerIntent.EXTRA_LANGUAGE,"ar")})
-              }catch(e:Exception){listening=false; Handler(Looper.getMainLooper()).postDelayed({startListen()},1000)}
-            }
-            override fun onBind(i:Intent?):IBinder?=null
-          }
+          class BgService: Service(), TextToSpeech.OnInitListener{lateinit var tts: TextToSpeech; var sr: SpeechRecognizer?=null; var listening=false; override fun onCreate(){super.onCreate(); tts=TextToSpeech(this,this); val ch=NotificationChannel("akh","Akhali Yemeni",NotificationManager.IMPORTANCE_LOW); (getSystemService(NOTIFICATION_SERVICE) as NotificationManager).createNotificationChannel(ch); startForeground(1, Notification.Builder(this,"akh").setContentTitle("أكحلي اليمني شغال 🇾🇪").setContentText("قل: يا أكحلي وينك").setSmallIcon(android.R.drawable.ic_btn_speak_now).build())}; override fun onInit(i:Int){tts.language=Locale("ar"); startListen()}; fun startListen(){if(listening) return; try{listening=true; sr?.destroy(); sr=SpeechRecognizer.createSpeechRecognizer(this); sr?.setRecognitionListener(object: RecognitionListener{override fun onResults(b:Bundle?){listening=false; val q=b?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.get(0)?.lowercase()?:""; val yemeniTriggers = listOf("اكحلي","كحلي","akhali","وينك","فينك","تعال","ايش","اش","شلني","قفل","افتح","كيف حالك","مو تشتي","ايش في","ايش تشتي"); if(yemeniTriggers.any{q.contains(it)}){val i=Intent(this@BgService, OverlayActivity::class.java).apply{putExtra("q",q); addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)}; startActivity(i)}; Handler(Looper.getMainLooper()).postDelayed({startListen()},700)}; override fun onError(e:Int){listening=false; Handler(Looper.getMainLooper()).postDelayed({startListen()},700)}; override fun onReadyForSpeech(p:Bundle?){}; override fun onBeginningOfSpeech(){}; override fun onRmsChanged(f:Float){}; override fun onBufferReceived(b:ByteArray?){}; override fun onEndOfSpeech(){}; override fun onEvent(t:Int,p:Bundle?){}; override fun onPartialResults(p:Bundle?){}}); sr?.startListening(Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply{putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM); putExtra(RecognizerIntent.EXTRA_LANGUAGE,"ar-YE"); putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE,"ar-YE")})}catch(e:Exception){listening=false; Handler(Looper.getMainLooper()).postDelayed({startListen()},1000)}}; override fun onBind(i:Intent?):IBinder?=null}
           K2
           cat > app/src/main/java/com/akhali/OverlayActivity.kt <<'K3'
-          package com.akhali
-          import android.app.Activity
-          import android.graphics.Color
-          import android.graphics.drawable.GradientDrawable
-          import android.os.*
-          import android.speech.tts.TextToSpeech
-          import android.view.Gravity
-          import android.widget.*
-          import java.util.*
-          class OverlayActivity: Activity(), TextToSpeech.OnInitListener{
-            lateinit var tts: TextToSpeech
-            lateinit var root: LinearLayout
-            var idx=0
-            val col=arrayOf(Color.parseColor("#FF6A00"), Color.parseColor("#EE0979"), Color.parseColor("#00C9FF"), Color.parseColor("#FFD200"))
-            override fun onCreate(b:Bundle?){
-              super.onCreate(b)
-              tts=TextToSpeech(this,this)
-              root=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL; gravity=Gravity.CENTER; setPadding(40,40,40,40)}
-              val q=intent.getStringExtra("q")?:""
-              root.addView(TextView(this).apply{text="● أكحلي ●"; textSize=50f; setTextColor(Color.WHITE); gravity=Gravity.CENTER})
-              root.addView(TextView(this).apply{text="سمعتك: $q"; textSize=20f; setTextColor(Color.WHITE); gravity=Gravity.CENTER})
-              setContentView(root)
-              Handler(Looper.getMainLooper()).postDelayed({finish()},5000)
-            }
-            override fun onInit(i:Int){
-              tts.language=Locale("ar"); tts.speak("نعم يا باشا انا هنا",TextToSpeech.QUEUE_FLUSH,null,null)
-              val h=Handler(Looper.getMainLooper())
-              val r=object:Runnable{override fun run(){root.background=GradientDrawable(GradientDrawable.Orientation.TL_BR,intArrayOf(col[idx%4],col[(idx+1)%4])); idx++; if(idx<30) h.postDelayed(this,120)}}
-              h.post(r)
-            }
-          }
-          K3
-          curl -sL https://services.gradle.org/distributions/gradle-7.6-bin.zip -o /tmp/gradle.zip
-          unzip -q /tmp/gradle.zip -d /tmp/
-          /tmp/gradle-7.6/bin/gradle assembleDebug --no-daemon
-      - uses: actions/upload-artifact@v4
-        with:
-          name: Akhali-117
-          path: app/build/outputs/apk/debug/*.apk
+         
