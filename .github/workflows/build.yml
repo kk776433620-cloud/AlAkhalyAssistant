@@ -1,4 +1,4 @@
-name: Build APK - Auto Fix
+name: Build APK
 on: [push, workflow_dispatch]
 jobs:
   build:
@@ -15,37 +15,29 @@ jobs:
           mkdir -p app/src/main/java/com/alakhaly/assistant
           mkdir -p app/src/main/res/layout
           mkdir -p gradle/wrapper
-          mv *.kt app/src/main/java/com/alakhaly/assistant/ || true
+          mv *.kt app/src/main/java/com/alakhaly/assistant/ 2>/dev/null || true
           [ -f "AndroidManifest.xml" ] && mv AndroidManifest.xml app/src/main/ || true
           [ -f "activity_main.xml" ] && mv activity_main.xml app/src/main/res/layout/ || true
           
+          # هذا هو الإصلاح للسطر 1
           cat > build.gradle << 'GRADLE'
-          buildscript { dependencies { classpath 'com.android.tools.build:gradle:8.1.4' classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.10' } }
-          task clean(type: Delete) { delete rootProject.buildDir }
+          buildscript {
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+              dependencies {
+                  classpath 'com.android.tools.build:gradle:8.1.4'
+                  classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.10'
+              }
+          }
+          task clean(type: Delete) {
+              delete rootProject.buildDir
+          }
           GRADLE
           
-          cat > settings.gradle << 'SET'
-          include ':app'
-          SET
+          echo "include ':app'" > settings.gradle
           
           cat > app/build.gradle << 'APP'
-          plugins { id 'com.android.application' id 'kotlin-android' }
-          android { namespace 'com.alakhaly.assistant' compileSdk 34 defaultConfig { applicationId "com.alakhaly.assistant" minSdk 24 targetSdk 34 versionCode 1 versionName "1.0" } }
-          dependencies { implementation 'androidx.core:core-ktx:1.12.0' implementation 'androidx.appcompat:appcompat:1.6.1' }
-          APP
-          
-          cat > gradle/wrapper/gradle-wrapper.properties << 'PROP'
-          distributionUrl=https\://services.gradle.org/distributions/gradle-8.5-bin.zip
-          PROP
-
-      - name: Build APK
-        uses: gradle/gradle-build-action@v3
-        with:
-          gradle-version: 8.5
-          arguments: assembleDebug
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: AlAkhali-APK-Fixed
-          path: app/build/outputs/apk/debug/*.apk
+          plugins {
+              id '
