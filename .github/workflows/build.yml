@@ -16,10 +16,11 @@ jobs:
           mkdir -p app/src/main/res/layout
           mkdir -p gradle/wrapper
           mv *.kt app/src/main/java/com/alakhaly/assistant/ 2>/dev/null || true
-          [ -f AndroidManifest.xml ] && mv AndroidManifest.xml app/src/main/ || true
-          [ -f activity_main.xml ] && mv activity_main.xml app/src/main/res/layout/ || true
+          [ -f "AndroidManifest.xml" ] && mv AndroidManifest.xml app/src/main/ || true
+          [ -f "activity_main.xml" ] && mv activity_main.xml app/src/main/res/layout/ || true
           
-          cat > build.gradle << 'EOF'
+          # هذا هو الإصلاح للسطر 1
+          cat > build.gradle << 'GRADLE'
           buildscript {
               repositories {
                   google()
@@ -33,11 +34,11 @@ jobs:
           task clean(type: Delete) {
               delete rootProject.buildDir
           }
-          EOF
+          GRADLE
           
           echo "include ':app'" > settings.gradle
           
-          cat > app/build.gradle << 'EOF'
+          cat > app/build.gradle << 'APP'
           plugins {
               id 'com.android.application'
               id 'org.jetbrains.kotlin.android'
@@ -57,9 +58,10 @@ jobs:
               implementation 'androidx.core:core-ktx:1.12.0'
               implementation 'androidx.appcompat:appcompat:1.6.1'
           }
-          EOF
+          APP
           
           echo "distributionUrl=https\://services.gradle.org/distributions/gradle-8.5-bin.zip" > gradle/wrapper/gradle-wrapper.properties
+          ls -R
 
       - name: Setup Gradle v4
         uses: gradle/actions/setup-gradle@v4
