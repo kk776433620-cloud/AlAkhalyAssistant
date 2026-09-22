@@ -1,17 +1,28 @@
-buildscript {
-    repositories {
-        google()
-        mavenCentral()
+plugins {
+    id 'com.android.application' version '8.1.1'
+    id 'org.jetbrains.kotlin.android' version '1.8.10'
+}
+
+android {
+    namespace 'com.alakhaly.assistant'
+    compileSdk 33
+
+    defaultConfig {
+        applicationId "com.alakhaly.assistant"
+        minSdk 21
+        targetSdk 33
+        versionCode 1
+        versionName "1.0"
     }
-    dependencies {
-        classpath 'com.android.tools.build:gradle:8.1.1'
-        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.10'
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
     }
 }
 
-allprojects {
-    repositories {
-        google()
-        mavenCentral()
-    }
+repositories {
+    google()
+    mavenCentral()
 }
