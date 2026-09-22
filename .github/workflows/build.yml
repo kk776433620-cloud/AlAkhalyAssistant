@@ -30,6 +30,12 @@ jobs:
                   classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.10'
               }
           }
+          allprojects {
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+          }
           task clean(type: Delete) {
               delete rootProject.buildDir
           }
@@ -60,7 +66,6 @@ jobs:
           APP
           
           echo "distributionUrl=https\://services.gradle.org/distributions/gradle-8.5-bin.zip" > gradle/wrapper/gradle-wrapper.properties
-          ls -R
 
       - name: Setup Gradle v4
         uses: gradle/actions/setup-gradle@v4
