@@ -22,14 +22,18 @@ jobs:
           END1
           cat > app/build.gradle << 'END2'
           plugins{ id 'com.android.application'; id 'org.jetbrains.kotlin.android' }
-          android{ namespace 'com.akhali'; compileSdk 33; defaultConfig{ applicationId "com.akhali"; minSdk 21; targetSdk 33; versionCode 115; versionName "115-BG-COLOR" }; compileOptions{ sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }; kotlinOptions{ jvmTarget='17' } }
+          android{ namespace 'com.akhali'; compileSdk 33; defaultConfig{ applicationId "com.akhali"; minSdk 21; targetSdk 33; versionCode 116; versionName "116-ICON-FIX" }; compileOptions{ sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }; kotlinOptions{ jvmTarget='17' } }
           dependencies{ implementation 'androidx.core:core-ktx:1.10.1' }
           END2
           cat > app/src/main/AndroidManifest.xml << 'END3'
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.akhali">
-            <uses-permission android:name="android.permission.RECORD_AUDIO"/><uses-permission android:name="android.permission.FOREGROUND_SERVICE"/><uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE"/><uses-permission android:name="android.permission.POST_NOTIFICATIONS"/><uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
-            <application android:label="Akhali BG"><activity android:name=".MainActivity" android:exported="true"/><activity android:name=".OverlayActivity" android:exported="false" android:theme="@android:style/Theme.Translucent.NoTitleBar"/><service android:name=".BgService" android:exported="false" android:foregroundServiceType="microphone"/></application>
+            <uses-permission android:name="android.permission.RECORD_AUDIO"/><uses-permission android:name="android.permission.FOREGROUND_SERVICE"/><uses-permission android:name="android.permission.POST_NOTIFICATIONS"/><uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+            <application android:label="Akhali BG">
+              <activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity>
+              <activity android:name=".OverlayActivity" android:exported="false" android:theme="@android:style/Theme.Translucent.NoTitleBar"/>
+              <service android:name=".BgService" android:exported="false" android:foregroundServiceType="microphone"/>
+            </application>
           </manifest>
           END3
           cat > app/src/main/java/com/akhali/MainActivity.kt << 'END5'
@@ -45,14 +49,14 @@ jobs:
             override fun onCreate(b:Bundle?){
               super.onCreate(b)
               val l=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL; setPadding(30,30,30,30)}
-              val tv=TextView(this).apply{text="أكحلي 115 - يشتغل في الخلفية\n\n1- اضغط زر 1: السماح فوق التطبيقات\n2- اضغط زر 2: شغل الخلفية\n3- بعدها اطلع من التطبيق وروح واتساب\n4- قول: يا أكحلي\n5- بتطلع الشاشة الملونة لحالها وترد صوت"; textSize=18f}
+              val tv=TextView(this).apply{text="أكحلي 116 - مصلح\n\nالآن الأيقونة بتطلع!\n1- اضغط زر 1: السماح فوق التطبيقات\n2- اضغط زر 2: شغل الخلفية\n3- اطلع وقل يا أكحلي"; textSize=18f}
               val b1=Button(this).apply{text="1- السماح بالظهور فوق التطبيقات"}
               val b2=Button(this).apply{text="2- شغل وضع الخلفية"}
               b1.setOnClickListener{ startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))) }
               b2.setOnClickListener{
                 requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO, Manifest.permission.POST_NOTIFICATIONS),1)
                 startForegroundService(Intent(this,BgService::class.java))
-                Toast.makeText(this,"اشتغل في الخلفية! اطلع وجرب قول يا أكحلي",Toast.LENGTH_LONG).show()
+                Toast.makeText(this,"اشتغل في الخلفية! اطلع وجرب",Toast.LENGTH_LONG).show()
               }
               l.addView(tv); l.addView(b1); l.addView(b2); setContentView(l)
             }
@@ -75,87 +79,4 @@ jobs:
               tts=TextToSpeech(this,this)
               val ch=NotificationChannel("akh","Akhali BG",NotificationManager.IMPORTANCE_LOW)
               (getSystemService(NOTIFICATION_SERVICE) as NotificationManager).createNotificationChannel(ch)
-              startForeground(1, Notification.Builder(this,"akh").setContentTitle("أكحلي شغال في الخلفية").setContentText("قل: يا أكحلي في أي مكان").setSmallIcon(android.R.drawable.ic_btn_speak_now).build())
-            }
-            override fun onInit(s:Int){ tts.language=Locale("ar"); startListen() }
-            fun startListen(){
-              if(listening) return
-              try{
-                listening=true
-                sr?.destroy()
-                sr=SpeechRecognizer.createSpeechRecognizer(this)
-                sr?.setRecognitionListener(object: RecognitionListener{
-                  override fun onResults(b:Bundle?){
-                    listening=false
-                    val q=b?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.get(0)?.lowercase()?: ""
-                    if(q.contains("اكحلي")||q.contains("akhali")||q.contains("هلا")||q.contains("يا")){
-                      val i=Intent(this@BgService, OverlayActivity::class.java).apply{putExtra("q",q); addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)}
-                      startActivity(i)
-                    }
-                    Handler(Looper.getMainLooper()).postDelayed({startListen()},700)
-                  }
-                  override fun onError(e:Int){ listening=false; Handler(Looper.getMainLooper()).postDelayed({startListen()},700) }
-                  override fun onReadyForSpeech(p:Bundle?){}
-                  override fun onBeginningOfSpeech(){}
-                  override fun onRmsChanged(v:Float){}
-                  override fun onBufferReceived(b:ByteArray?){}
-                  override fun onEndOfSpeech(){}
-                  override fun onEvent(t:Int,p:Bundle?){}
-                  override fun onPartialResults(p:Bundle?){}
-                })
-                sr?.startListening(Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply{
-                  putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                  putExtra(RecognizerIntent.EXTRA_LANGUAGE, "ar")
-                })
-              }catch(e:Exception){ listening=false; Handler(Looper.getMainLooper()).postDelayed({startListen()},1000) }
-            }
-            override fun onBind(i:Intent?):IBinder?=null
-          }
-          END6
-          cat > app/src/main/java/com/akhali/OverlayActivity.kt << 'END7'
-          package com.akhali
-          import android.app.Activity
-          import android.graphics.Color
-          import android.graphics.drawable.GradientDrawable
-          import android.os.Bundle
-          import android.os.Handler
-          import android.os.Looper
-          import android.speech.tts.TextToSpeech
-          import android.view.Gravity
-          import android.widget.*
-          import java.util.*
-          class OverlayActivity: Activity(), TextToSpeech.OnInitListener{
-            lateinit var tts: TextToSpeech
-            lateinit var root: LinearLayout
-            var idx=0
-            val colors= arrayOf(Color.parseColor("#FF6A00"), Color.parseColor("#EE0979"), Color.parseColor("#00C9FF"), Color.parseColor("#FFD200"))
-            override fun onCreate(b:Bundle?){
-              super.onCreate(b)
-              tts=TextToSpeech(this,this)
-              root=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL; gravity=Gravity.CENTER; setPadding(40,40,40,40)}
-              val q=intent.getStringExtra("q")?:""
-              val circle=TextView(this).apply{text="● أكحلي ●"; textSize=50f; setTextColor(Color.WHITE); gravity=Gravity.CENTER}
-              val txt=TextView(this).apply{text="سمعتك: $q\n\n"; textSize=20f; setTextColor(Color.WHITE); gravity=Gravity.CENTER}
-              root.addView(circle); root.addView(txt)
-              setContentView(root)
-              Handler(Looper.getMainLooper()).postDelayed({finish()},5000)
-            }
-            override fun onInit(s:Int){
-              tts.language=Locale("ar")
-              val q=intent.getStringExtra("q")?:""
-              val ans= if(q.contains("هلا")) "هلا والله يا غالي" else "نعم يا باشا أنا هنا"
-              tts.speak(ans,TextToSpeech.QUEUE_FLUSH,null,null)
-              val h=Handler(Looper.getMainLooper())
-              val r=object: Runnable{ override fun run(){ root.background=GradientDrawable(GradientDrawable.Orientation.TL_BR, intArrayOf(colors[idx%4], colors[(idx+1)%4])); idx++; if(idx<30) h.postDelayed(this,120) } }
-              h.post(r)
-            }
-          }
-          END7
-      - uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: 7.6
-      - run: gradle assembleDebug --no-daemon
-      - uses: actions/upload-artifact@v4
-        with:
-          name: Akhali-115-BG-COLOR-VOICE
-          path: app/build/outputs/apk/debug/*.apk
+              startForeground(1, Notification
