@@ -10,6 +10,7 @@ jobs:
       - name: Rebuild Project Structure
         run: |
           mkdir -p app/src/main/java/com/alakhaly/assistant
+          mkdir -p gradle/wrapper
           cat > settings.gradle << 'EOF'
           pluginManagement { repositories { google(); mavenCentral(); gradlePluginPortal() } }
           dependencyResolutionManagement { repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS); repositories { google(); mavenCentral() } }
@@ -20,7 +21,7 @@ jobs:
           EOF
           cat > app/build.gradle << 'EOF'
           plugins { id 'com.android.application'; id 'org.jetbrains.kotlin.android' }
-          android { namespace 'com.alakhaly.assistant'; compileSdk 33; defaultConfig { applicationId "com.alakhaly.assistant"; minSdk 21; targetSdk 28; versionCode 3; versionName "1.0-android9-fixed" } }
+          android { namespace 'com.alakhaly.assistant'; compileSdk 33; defaultConfig { applicationId "com.alakhaly.assistant"; minSdk 21; targetSdk 28; versionCode 4; versionName "1.0-android9-fixed2" } }
           dependencies { implementation 'org.jetbrains.kotlin:kotlin-stdlib:1.8.10' }
           EOF
           cat > app/src/main/AndroidManifest.xml << 'EOF'
