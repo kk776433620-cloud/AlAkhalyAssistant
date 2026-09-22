@@ -1,4 +1,4 @@
-name: Build AlAkhaly Full APK
+name: بيني
 on: [push, workflow_dispatch]
 jobs:
   build:
@@ -8,63 +8,75 @@ jobs:
       - uses: actions/setup-java@v5
         with: { java-version: '17', distribution: 'temurin' }
 
-      - name: Reorganize project to Android structure
+      - name: Fix root build.gradle that causes clean() error
         run: |
-          echo "--- Before ---"
-          ls -la
+          rm -f build.gradle settings.gradle
+          rm -rf app build .gradle gradle
           mkdir -p app/src/main/java/com/alakhaly/assistant
-          mkdir -p app/src/main/res/layout
           mkdir -p gradle/wrapper
-          
-          # انقل كل ملفات الكوتلن للمكان الصحيح
-          mv *.kt app/src/main/java/com/alakhaly/assistant/ 2>/dev/null || true
-          
-          # انقل الـ Manifest لو موجود في الجذر
-          if [ -f AndroidManifest.xml ]; then mv AndroidManifest.xml app/src/main/AndroidManifest.xml; fi
-          if [ -f AndroidManifest.xml.xml ]; then mv AndroidManifest.xml.xml app/src/main/AndroidManifest.xml; fi
-          if ls AndroidManifest* 1> /dev/null 2>&1; then mv AndroidManifest* app/src/main/AndroidManifest.xml 2>/dev/null || true; fi
 
-          # انشئ Manifest جديد لو ما وجد
-          if [ ! -f app/src/main/AndroidManifest.xml ]; then
-          cat > app/src/main/AndroidManifest.xml << 'MAN'
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.alakhaly.assistant">
-            <uses-permission android:name="android.permission.INTERNET"/>
-            <application android:label="AlAkhaly Assistant" android:allowBackup="true">
-              <activity android:name=".MainActivity" android:exported="true">
-                <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
-              </activity>
-            </application>
-          </manifest>
-          MAN
-          fi
-
-          # build.gradle
-          cat > app/build.gradle << 'GRD'
-          plugins { id 'com.android.application'; id 'org.jetbrains.kotlin.android' }
-          android { namespace 'com.alakhaly.assistant'; compileSdk 33; defaultConfig { applicationId "com.alakhaly.assistant"; minSdk 21; targetSdk 33; versionCode 2; versionName "2.0-Full" }; compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }; kotlinOptions { jvmTarget = '17' } }
-          dependencies { implementation 'androidx.core:core-ktx:1.10.1'; implementation 'org.jetbrains.kotlin:kotlin-stdlib:1.8.20' }
-          GRD
-
-          cat > build.gradle << 'GRD2'
-          buildscript { dependencies { classpath 'com.android.tools.build:gradle:7.4.2'; classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.20' } } task clean(type: Delete) { delete rootProject.buildDir }
-          GRD2
+          cat > build.gradle << 'ROOT'
+          buildscript {
+            repositories { google(); mavenCentral() }
+            dependencies {
+              classpath 'com.android.tools.build:gradle:7.4.2'
+              classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.20'
+            }
+          }
+          allprojects { repositories { google(); mavenCentral() } }
+          ROOT
 
           cat > settings.gradle << 'SET'
           include ':app'
           SET
 
+          cat > app/src/main/AndroidManifest.xml << 'XML'
+          <?xml version="1.0" encoding="utf-8"?>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.alakhaly.assistant">
+            <application android:label="AlAkhaly">
+              <activity android:name=".MainActivity" android:exported="true">
+                <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+              </activity>
+            </application>
+          </manifest>
+          XML
+
+          cat > app/src/main/java/com/alakhaly/assistant/MainActivity.kt << 'KT'
+          package com.alakhaly.assistant
+          import android.os.Bundle
+          import androidx.appcompat.app.AppCompatActivity
+          import android.widget.TextView
+          class MainActivity : AppCompatActivity() {
+            override fun onCreate(savedInstanceState: Bundle?) {
+              super.onCreate(savedInstanceState)
+              val tv = TextView(this)
+              tv.text = "AlAkhaly Assistant - نجح!"
+              tv.textSize = 22f
+              tv.setPadding(50,150,50,50)
+              setContentView(tv)
+            }
+          }
+          KT
+
+          cat > app/build.gradle << 'APP'
+          plugins { id 'com.android.application'; id 'org.jetbrains.kotlin.android' }
+          android {
+            namespace 'com.alakhaly.assistant'
+            compileSdk 33
+            defaultConfig { applicationId "com.alakhaly.assistant"; minSdk 21; targetSdk 33; versionCode 11; versionName "11.0" }
+            compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+            kotlinOptions { jvmTarget = '17' }
+          }
+          dependencies {
+            implementation 'androidx.appcompat:appcompat:1.6.1'
+            implementation 'androidx.core:core-ktx:1.10.1'
+          }
+          APP
+
           echo "distributionUrl=https\://services.gradle.org/distributions/gradle-7.6-bin.zip" > gradle/wrapper/gradle-wrapper.properties
-          
-          echo "--- After ---"
-          find app -type f | head -n 50
 
       - uses: gradle/actions/setup-gradle@v4
         with: { gradle-version: 7.6 }
-
-      - name: Build
-        run: gradle assembleDebug --no-daemon --stacktrace
-
+      - run: gradle assembleDebug --no-daemon
       - uses: actions/upload-artifact@v4
-        with:
-          name: AlAkhali-FULL-APK
-          path: app/build/outputs/apk/debug/*.apk
+        with: { name: AlAkhali-APK-Fixed, path: app/build/outputs/apk/debug/*.apk }
