@@ -9,24 +9,42 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-      - name: Build APK Yemeni
+      - name: Build Yemeni Stable
         run: |
           rm -rf app/build.gradle build.gradle settings.gradle gradle.properties
-          mkdir -p gradle/wrapper
-          mkdir -p app/src/main/java/com/akhali
+          mkdir -p gradle/wrapper app/src/main/java/com/akhali
           echo "android.useAndroidX=true" > gradle.properties
           echo "distributionUrl=https\://services.gradle.org/distributions/gradle-7.6-bin.zip" > gradle/wrapper/gradle-wrapper.properties
           echo "include ':app'" > settings.gradle
-          printf "buildscript {\n repositories { google(); mavenCentral() }\n dependencies {\n classpath 'com.android.tools.build:gradle:7.4.2'\n classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.20'\n }\n}\nallprojects { repositories { google(); mavenCentral() } }\n" > build.gradle
-          cat > app/build.gradle <<'EOF'
+          cat > build.gradle <<'E1'
+          buildscript {
+              repositories { google(); mavenCentral() }
+              dependencies {
+                  classpath 'com.android.tools.build:gradle:7.4.2'
+                  classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.20'
+              }
+          }
+          allprojects { repositories { google(); mavenCentral() } }
+          E1
+          cat > app/build.gradle <<'E2'
           plugins { id 'com.android.application'; id 'org.jetbrains.kotlin.android' }
-          android { namespace 'com.akhali'; compileSdk 33; defaultConfig { applicationId "com.akhali"; minSdk 21; targetSdk 33; versionCode 122; versionName "122-YEMENI" } compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 } kotlinOptions { jvmTarget='17' } }
+          android {
+              namespace 'com.akhali'
+              compileSdk 33
+              defaultConfig {
+                  applicationId "com.akhali"
+                  minSdk 21
+                  targetSdk 33
+                  versionCode 123
+                  versionName "123-STABLE-YEMENI"
+              }
+          }
           dependencies { implementation 'androidx.core:core-ktx:1.10.1' }
-          EOF
-          cat > app/src/main/AndroidManifest.xml <<'EOF'
+          E2
+          cat > app/src/main/AndroidManifest.xml <<'E3'
           <?xml version="1.0" encoding="utf-8"?><manifest xmlns:android="http://schemas.android.com/apk/res/android"><uses-permission android:name="android.permission.RECORD_AUDIO"/><uses-permission android:name="android.permission.FOREGROUND_SERVICE"/><uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/><application android:label="Akhali Yemeni"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity><activity android:name=".OverlayActivity" android:exported="false" android:theme="@android:style/Theme.Translucent.NoTitleBar"/><service android:name=".BgService" android:exported="false" android:foregroundServiceType="microphone"/></application></manifest>
-          EOF
-          cat > app/src/main/java/com/akhali/MainActivity.kt <<'EOF'
+          E3
+          cat > app/src/main/java/com/akhali/MainActivity.kt <<'E4'
           package com.akhali
           import android.app.Activity
           import android.content.Intent
@@ -38,16 +56,16 @@ jobs:
             override fun onCreate(b:Bundle?){
               super.onCreate(b)
               val l=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL; setPadding(40,40,40,40)}
-              l.addView(TextView(this).apply{text="أكحلي 122 يمني 🇾🇪\nيفهم: وينك، ايش في، تعال، شلني"; textSize=18f})
+              l.addView(TextView(this).apply{text="أكحلي 123 يمني مستقر 🇾🇪\n\nيفهم:\nوينك - فينك - ايش في - تعال - شلني"; textSize=18f})
               val b1=Button(this).apply{text="1- السماح فوق التطبيقات"}
               val b2=Button(this).apply{text="2- شغل اليمني 🇾🇪"}
               b1.setOnClickListener{startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")))}
-              b2.setOnClickListener{requestPermissions(arrayOf(android.Manifest.permission.RECORD_AUDIO),1); startForegroundService(Intent(this,BgService::class.java)); Toast.makeText(this,"شغال!",Toast.LENGTH_SHORT).show()}
+              b2.setOnClickListener{requestPermissions(arrayOf(android.Manifest.permission.RECORD_AUDIO),1); startForegroundService(Intent(this,BgService::class.java)); Toast.makeText(this,"شغال يمني!",Toast.LENGTH_SHORT).show()}
               l.addView(b1); l.addView(b2); setContentView(l)
             }
           }
-          EOF
-          cat > app/src/main/java/com/akhali/BgService.kt <<'EOF'
+          E4
+          cat > app/src/main/java/com/akhali/BgService.kt <<'E5'
           package com.akhali
           import android.app.*
           import android.content.*
@@ -56,12 +74,9 @@ jobs:
           import android.speech.tts.TextToSpeech
           import java.util.*
           class BgService: Service(), TextToSpeech.OnInitListener{
-            lateinit var tts: TextToSpeech
-            var sr: SpeechRecognizer?=null
-            var listening=false
+            lateinit var tts: TextToSpeech; var sr: SpeechRecognizer?=null; var listening=false
             override fun onCreate(){
-              super.onCreate()
-              tts=TextToSpeech(this,this)
+              super.onCreate(); tts=TextToSpeech(this,this)
               val ch=NotificationChannel("akh","Akhali",NotificationManager.IMPORTANCE_LOW)
               (getSystemService(NOTIFICATION_SERVICE) as NotificationManager).createNotificationChannel(ch)
               startForeground(1, Notification.Builder(this,"akh").setContentTitle("أكحلي اليمني شغال").setContentText("قل يا أكحلي وينك").setSmallIcon(android.R.drawable.ic_btn_speak_now).build())
@@ -76,72 +91,65 @@ jobs:
                     listening=false
                     val q=b?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.get(0)?.lowercase()?:""
                     if(listOf("اكحلي","كحلي","وينك","فينك","تعال","ايش","شلني").any{q.contains(it)}){
-                      val i=Intent(this@BgService, OverlayActivity::class.java).apply{putExtra("q",q); addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)}
-                      startActivity(i)
+                      val i=Intent(this@BgService, OverlayActivity::class.java).apply{putExtra("q",q); addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)}; startActivity(i)
                     }
                     Handler(Looper.getMainLooper()).postDelayed({startListen()},700)
                   }
                   override fun onError(e:Int){listening=false; Handler(Looper.getMainLooper()).postDelayed({startListen()},700)}
-                  override fun onReadyForSpeech(p:Bundle?){}
-                  override fun onBeginningOfSpeech(){}
-                  override fun onRmsChanged(f:Float){}
-                  override fun onBufferReceived(b:ByteArray?){}
-                  override fun onEndOfSpeech(){}
-                  override fun onEvent(t:Int,p:Bundle?){}
-                  override fun onPartialResults(p:Bundle?){}
+                  override fun onReadyForSpeech(p:Bundle?){}; override fun onBeginningOfSpeech(){}; override fun onRmsChanged(f:Float){}; override fun onBufferReceived(b:ByteArray?){}; override fun onEndOfSpeech(){}; override fun onEvent(t:Int,p:Bundle?){}; override fun onPartialResults(p:Bundle?){}
                 })
                 sr?.startListening(Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply{putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM); putExtra(RecognizerIntent.EXTRA_LANGUAGE,"ar-YE")})
               }catch(e:Exception){listening=false; Handler(Looper.getMainLooper()).postDelayed({startListen()},1000)}
             }
             override fun onBind(i:Intent?):IBinder?=null
           }
-          EOF
-          cat > app/src/main/java/com/akhali/OverlayActivity.kt <<'EOF'
+          E5
+          cat > app/src/main/java/com/akhali/OverlayActivity.kt <<'E6'
           package com.akhali
           import android.app.Activity
           import android.graphics.Color
-          import android.graphics.drawable.GradientDrawable
           import android.os.*
           import android.speech.tts.TextToSpeech
           import android.view.Gravity
           import android.widget.*
           import java.util.*
           class OverlayActivity: Activity(), TextToSpeech.OnInitListener{
-            lateinit var tts: TextToSpeech
-            lateinit var root: LinearLayout
-            var idx=0
-            val col=arrayOf(Color.parseColor("#FF6A00"), Color.parseColor("#EE0979"), Color.parseColor("#00C9FF"), Color.parseColor("#FFD200"))
-            var userQuery=""
+            lateinit var tts: TextToSpeech; var userQuery=""
             override fun onCreate(b:Bundle?){
-              super.onCreate(b)
-              tts=TextToSpeech(this,this)
-              root=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL; gravity=Gravity.CENTER; setPadding(40,40,40,40)}
+              super.onCreate(b); tts=TextToSpeech(this,this)
               userQuery=intent.getStringExtra("q")?:""
-              root.addView(TextView(this).apply{text="● يمني ●"; textSize=45f; setTextColor(Color.WHITE); gravity=Gravity.CENTER})
-              root.addView(TextView(this).apply{text=userQuery; textSize=18f; setTextColor(Color.WHITE); gravity=Gravity.CENTER})
+              val root=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL; gravity=Gravity.CENTER; setPadding(50,50,50,50); setBackgroundColor(Color.parseColor("#CC000000"))}
+              root.addView(TextView(this).apply{text="🇾🇪 أكحلي اليمني"; textSize=32f; setTextColor(Color.WHITE); gravity=Gravity.CENTER})
+              root.addView(TextView(this).apply{text="\nسمعتك: $userQuery"; textSize=18f; setTextColor(Color.WHITE); gravity=Gravity.CENTER})
+              root.addView(TextView(this).apply{text="\n"; textSize=10f})
+              val reply = when{
+                userQuery.contains("وينك")||userQuery.contains("فينك") -> "موجود يا حبيب قلبي جنبك!"
+                userQuery.contains("كيف") -> "بخير والله انت كيفك يا غالي؟"
+                userQuery.contains("ايش")||userQuery.contains("اش") -> "ما في شي، آمرني ايش تشتي؟"
+                userQuery.contains("تعال")||userQuery.contains("شلني") -> "جيت لك طوالي، ها انا جيت!"
+                else -> "نعم يا باشا، آمرني"
+              }
+              root.addView(TextView(this).apply{text=reply; textSize=24f; setTextColor(Color.YELLOW); gravity=Gravity.CENTER})
               setContentView(root)
-              Handler(Looper.getMainLooper()).postDelayed({finish()},6000)
+              Handler(Looper.getMainLooper()).postDelayed({finish()},5000)
             }
             override fun onInit(i:Int){
               tts.language=Locale("ar")
               val q=userQuery
               val reply=when{
-                q.contains("وينك")||q.contains("فينك") -> "موجود يا حبيب جنبك!"
+                q.contains("وينك")||q.contains("فينك") -> "موجود يا حبيب قلبي جنبك"
                 q.contains("ايش") -> "ما في شي آمرني"
                 q.contains("تعال") -> "جيت لك طوالي"
-                else -> "نعم يا باشا آمرني يمني"
+                else -> "نعم يا باشا آمرني"
               }
               tts.speak(reply,TextToSpeech.QUEUE_FLUSH,null,null)
-              val h=Handler(Looper.getMainLooper())
-              val r=object:Runnable{override fun run(){root.background=GradientDrawable(GradientDrawable.Orientation.TL_BR,intArrayOf(col[idx%4],col[(idx+1)%4])); idx++; if(idx<40) h.postDelayed(this,100)}}
-              h.post(r)
             }
           }
-          EOF
+          E6
           curl -sL https://services.gradle.org/distributions/gradle-7.6-bin.zip -o /tmp/g.zip
           unzip -q /tmp/g.zip -d /tmp/
           /tmp/gradle-7.6/bin/gradle assembleDebug --no-daemon
       - uses: actions/upload-artifact@v4
         with:
-          name: Akhali-122-Yemeni
+          name: Akhali-123-STABLE
           path: app/build/outputs/apk/debug/*.apk
