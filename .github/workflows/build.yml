@@ -15,20 +15,12 @@ jobs:
           mkdir -p app/src/main/java/com/alakhaly/assistant
           mkdir -p app/src/main/res/layout
           mkdir -p gradle/wrapper
-          rm -f gradle.properties app/gradle.properties
 
-          echo "org.gradle.jvmargs=-Xmx2g
+          cat > gradle.properties << 'EOF'
+          org.gradle.jvmargs=-Xmx2g
           android.useAndroidX=true
-          android.enableJetifier=true" > gradle.properties
-          
-          echo "org.gradle.jvmargs=-Xmx2g
-          android.useAndroidX=true
-          android.enableJetifier=true" > app/gradle.properties
-
-          echo "distributionUrl=https\://services.gradle.org/distributions/gradle-8.5-bin.zip" > gradle/wrapper/gradle-wrapper.properties
-          
-          cat gradle.properties
-          cat app/gradle.properties
+          android.enableJetifier=true
+          EOF
 
           cat > settings.gradle << 'EOF'
           pluginManagement {
@@ -63,6 +55,13 @@ jobs:
                   versionCode 1
                   versionName "1.0"
               }
+              compileOptions {
+                  sourceCompatibility JavaVersion.VERSION_17
+                  targetCompatibility JavaVersion.VERSION_17
+              }
+              kotlinOptions {
+                  jvmTarget = '17'
+              }
           }
           dependencies {
               implementation 'androidx.core:core-ktx:1.12.0'
@@ -88,7 +87,7 @@ jobs:
               android:layout_width="match_parent" android:layout_height="match_parent"
               android:gravity="center" android:orientation="vertical">
               <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                  android:text="Works!" android:textSize="22sp"/>
+                  android:text="AlAkhali Works!" android:textSize="22sp"/>
           </LinearLayout>
           EOF
 
@@ -103,6 +102,8 @@ jobs:
               }
           }
           EOF
+
+          echo "distributionUrl=https\://services.gradle.org/distributions/gradle-8.5-bin.zip" > gradle/wrapper/gradle-wrapper.properties
 
       - uses: gradle/actions/setup-gradle@v4
         with:
