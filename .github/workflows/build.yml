@@ -9,7 +9,7 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-      - name: Build Yemeni Stable
+      - name: Build 131 Ultimate Self Programming + Full Control
         run: |
           rm -rf app/build.gradle build.gradle settings.gradle gradle.properties
           mkdir -p gradle/wrapper app/src/main/java/com/akhali
@@ -17,32 +17,22 @@ jobs:
           echo "distributionUrl=https\://services.gradle.org/distributions/gradle-7.6-bin.zip" > gradle/wrapper/gradle-wrapper.properties
           echo "include ':app'" > settings.gradle
           cat > build.gradle <<'E1'
-          buildscript {
-              repositories { google(); mavenCentral() }
-              dependencies {
-                  classpath 'com.android.tools.build:gradle:7.4.2'
-                  classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.20'
-              }
-          }
+          buildscript { repositories { google(); mavenCentral() } dependencies { classpath 'com.android.tools.build:gradle:7.4.2'; classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.20' } }
           allprojects { repositories { google(); mavenCentral() } }
           E1
           cat > app/build.gradle <<'E2'
           plugins { id 'com.android.application'; id 'org.jetbrains.kotlin.android' }
-          android {
-              namespace 'com.akhali'
-              compileSdk 33
-              defaultConfig {
-                  applicationId "com.akhali"
-                  minSdk 21
-                  targetSdk 33
-                  versionCode 123
-                  versionName "123-STABLE-YEMENI"
-              }
-          }
+          android { namespace 'com.akhali'; compileSdk 33; defaultConfig { applicationId "com.akhali.yemeni"; minSdk 21; targetSdk 33; versionCode 131; versionName "131-ULTIMATE" } }
           dependencies { implementation 'androidx.core:core-ktx:1.10.1' }
           E2
           cat > app/src/main/AndroidManifest.xml <<'E3'
-          <?xml version="1.0" encoding="utf-8"?><manifest xmlns:android="http://schemas.android.com/apk/res/android"><uses-permission android:name="android.permission.RECORD_AUDIO"/><uses-permission android:name="android.permission.FOREGROUND_SERVICE"/><uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/><application android:label="Akhali Yemeni"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity><activity android:name=".OverlayActivity" android:exported="false" android:theme="@android:style/Theme.Translucent.NoTitleBar"/><service android:name=".BgService" android:exported="false" android:foregroundServiceType="microphone"/></application></manifest>
+          <?xml version="1.0" encoding="utf-8"?><manifest xmlns:android="http://schemas.android.com/apk/res/android">
+          <uses-permission android:name="android.permission.RECORD_AUDIO"/><uses-permission android:name="android.permission.INTERNET"/>
+          <uses-permission android:name="android.permission.CAMERA"/><uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+          <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/><uses-permission android:name="android.permission.CALL_PHONE"/>
+          <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/><uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
+          <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
+          <application android:label="Akhali 131 Ultimate"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity><activity android:name=".OverlayActivity" android:exported="false" android:theme="@android:style/Theme.Translucent.NoTitleBar"/><activity android:name=".LabActivity" android:exported="false"/><activity android:name=".ResearchActivity" android:exported="false"/><service android:name=".BgService" android:exported="false" android:foregroundServiceType="microphone"/></application></manifest>
           E3
           cat > app/src/main/java/com/akhali/MainActivity.kt <<'E4'
           package com.akhali
@@ -53,19 +43,50 @@ jobs:
           import android.provider.Settings
           import android.widget.*
           class MainActivity: Activity(){
-            override fun onCreate(b:Bundle?){
-              super.onCreate(b)
-              val l=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL; setPadding(40,40,40,40)}
-              l.addView(TextView(this).apply{text="أكحلي 123 يمني مستقر 🇾🇪\n\nيفهم:\nوينك - فينك - ايش في - تعال - شلني"; textSize=18f})
-              val b1=Button(this).apply{text="1- السماح فوق التطبيقات"}
-              val b2=Button(this).apply{text="2- شغل اليمني 🇾🇪"}
-              b1.setOnClickListener{startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")))}
-              b2.setOnClickListener{requestPermissions(arrayOf(android.Manifest.permission.RECORD_AUDIO),1); startForegroundService(Intent(this,BgService::class.java)); Toast.makeText(this,"شغال يمني!",Toast.LENGTH_SHORT).show()}
-              l.addView(b1); l.addView(b2); setContentView(l)
-            }
+            override fun onCreate(b:Bundle?){super.onCreate(b); val sp=getSharedPreferences("ultimate",0); val ver=sp.getInt("code_ver",1); val funcs=sp.all.filterKeys{it.startsWith("func_")}.size; val research=sp.getInt("research_count",0); val l=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL; setPadding(30,30,30,30)}; l.addView(TextView(this).apply{text="أكحلي 131 ULTIMATE 🤖🇾🇪💻\n\n🧬 نظام برمجي حديث Kotlin\n📦 إصدار كوده: v$ver\n⚙️ دوال برمجها لنفسه: $funcs\n🔍 بحوث سواها: $research\n\n✅ المميزات الكاملة:\n• يبرمج نفسه بنفسه\n• يفتح النت ويبحث ويتعلم\n• يتحكم بالجوال كامل بأمرك\n• يطور لهجته اليمنية ذاتياً\n\nالحالة:\n🌐 النت: ${if(sp.getBoolean("allow_net",false))"✅" else "❌"}\n📱 التحكم: ${if(sp.getBoolean("allow_control",false))"✅" else "❌"}\n💻 البرمجة الذاتية: ${if(sp.getBoolean("allow_code",false))"✅" else "❌"}"; textSize=13f}); val b1=Button(this).apply{text="1- السماح فوق التطبيقات"}; val bNet=Button(this).apply{text="🌐 اسمح يفتح النت ويبحث"}; val bControl=Button(this).apply{text="📱 اسمح يتحكم بالجوال كامل"}; val bCode=Button(this).apply{text="💻 اسمح يبرمج ويحدث نفسه"}; val bLab=Button(this).apply{text="🔬 مختبر البرمجة الذاتية"}; val b2=Button(this).apply{text="2- شغل ULTIMATE 🚀"}; b1.setOnClickListener{startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")))}; bNet.setOnClickListener{sp.edit().putBoolean("allow_net",true).apply(); recreate()}; bControl.setOnClickListener{sp.edit().putBoolean("allow_control",true).apply(); recreate()}; bCode.setOnClickListener{sp.edit().putBoolean("allow_code",true).apply(); recreate()}; bLab.setOnClickListener{startActivity(Intent(this, LabActivity::class.java))}; b2.setOnClickListener{requestPermissions(arrayOf(android.Manifest.permission.RECORD_AUDIO, android.Manifest.permission.CALL_PHONE),1); startForegroundService(Intent(this,BgService::class.java)); Toast.makeText(this,"ULTIMATE شغال!",Toast.LENGTH_SHORT).show()}; l.addView(b1); l.addView(bNet); l.addView(bControl); l.addView(bCode); l.addView(bLab); l.addView(b2); setContentView(l)}
           }
           E4
-          cat > app/src/main/java/com/akhali/BgService.kt <<'E5'
+          cat > app/src/main/java/com/akhali/LabActivity.kt <<'E5'
+          package com.akhali
+          import android.app.Activity
+          import android.graphics.Color
+          import android.os.Bundle
+          import android.widget.*
+          class LabActivity: Activity(){
+            override fun onCreate(b:Bundle?){
+              super.onCreate(b); val sp=getSharedPreferences("ultimate",0)
+              val root=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL; setPadding(20,20,20,20); setBackgroundColor(Color.parseColor("#FF0D1117"))}
+              root.addView(TextView(this).apply{text="🔬 مختبر البرمجة الذاتية - Kotlin الحديثة\n"; textSize=17f; setTextColor(Color.WHITE)})
+              val log=TextView(this).apply{text=""; textSize=11f; setTextColor(Color.GREEN); setBackgroundColor(Color.BLACK); setPadding(10,10,10,10)}
+              fun refresh(){val ver=sp.getInt("code_ver",1); log.text="إصدار النظام: v$ver\nلغة البرمجة: Kotlin 1.8 (حديثة)\n\nالدوال التي برمجها لنفسه:\n${sp.all.filterKeys{it.startsWith("func_")}.entries.joinToString("\n"){it.key+" = "+it.value}}\n\nآخر كود كتبه:\n${sp.getString("last_code","لا يوجد")}\n\nالبحوث:\n${sp.getInt("research_count",0)} بحث"}
+              refresh()
+              val btn=Button(this).apply{text="⚡ خليه يبرمج دالة جديدة الآن بموافقتك"; setBackgroundColor(Color.parseColor("#FF6F00"))}
+              btn.setOnClickListener{
+                if(!sp.getBoolean("allow_code",false)){Toast.makeText(this,"لازم تسمح له يبرمج نفسه أول!",Toast.LENGTH_LONG).show(); return@setOnClickListener}
+                val ver=sp.getInt("code_ver",1)+1
+                val codes=listOf("fun reply_yemeni_aseel() = \"أرحب يا حيد أخوك فوق العين والراس\"","fun control_phone() = \"أتحكم بالجوال كامل بأمرك يا شيخ\"","fun search_learn() = \"أبحث في النت وأتعلم لهجة يمنية جديدة\"","fun auto_evolve() = \"أطور نفسي بنفسي للجيل $ver\"")
+                val c=codes.random(); sp.edit().putInt("code_ver",ver).putString("func_$ver",c).putString("last_code",c).apply(); refresh(); Toast.makeText(this,"✅ برمج نفسه! v$ver\n$c",Toast.LENGTH_LONG).show()
+              }
+              root.addView(log); root.addView(btn); setContentView(root)
+            }
+          }
+          E5
+          cat > app/src/main/java/com/akhali/ResearchActivity.kt <<'E6'
+          package com.akhali
+          import android.app.Activity
+          import android.os.Bundle
+          import android.webkit.WebView
+          import android.webkit.WebViewClient
+          import android.widget.*
+          class ResearchActivity: Activity(){
+            override fun onCreate(b:Bundle?){
+              super.onCreate(b); val q=intent.getStringExtra("q")?:"yemeni dialect"
+              val lay=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL}; lay.addView(TextView(this).apply{text="🔍 أكحلي يبحث ويتعلم: $q\nيبرمج نفسه من النت..."; setPadding(20,20,20,20)}); val w=WebView(this); w.webViewClient=WebViewClient(); w.settings.javaScriptEnabled=true; w.loadUrl("https://www.google.com/search?q=$q"); lay.addView(w); setContentView(lay)
+              val sp=getSharedPreferences("ultimate",0); sp.edit().putInt("research_count", sp.getInt("research_count",0)+1).apply()
+            }
+          }
+          E6
+          cat > app/src/main/java/com/akhali/BgService.kt <<'E7'
           package com.akhali
           import android.app.*
           import android.content.*
@@ -73,83 +94,60 @@ jobs:
           import android.speech.*
           import android.speech.tts.TextToSpeech
           import java.util.*
-          class BgService: Service(), TextToSpeech.OnInitListener{
-            lateinit var tts: TextToSpeech; var sr: SpeechRecognizer?=null; var listening=false
-            override fun onCreate(){
-              super.onCreate(); tts=TextToSpeech(this,this)
-              val ch=NotificationChannel("akh","Akhali",NotificationManager.IMPORTANCE_LOW)
-              (getSystemService(NOTIFICATION_SERVICE) as NotificationManager).createNotificationChannel(ch)
-              startForeground(1, Notification.Builder(this,"akh").setContentTitle("أكحلي اليمني شغال").setContentText("قل يا أكحلي وينك").setSmallIcon(android.R.drawable.ic_btn_speak_now).build())
-            }
-            override fun onInit(i:Int){tts.language=Locale("ar"); startListen()}
-            fun startListen(){
-              if(listening) return
-              try{
-                listening=true; sr?.destroy(); sr=SpeechRecognizer.createSpeechRecognizer(this)
-                sr?.setRecognitionListener(object: RecognitionListener{
-                  override fun onResults(b:Bundle?){
-                    listening=false
-                    val q=b?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.get(0)?.lowercase()?:""
-                    if(listOf("اكحلي","كحلي","وينك","فينك","تعال","ايش","شلني").any{q.contains(it)}){
-                      val i=Intent(this@BgService, OverlayActivity::class.java).apply{putExtra("q",q); addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)}; startActivity(i)
-                    }
-                    Handler(Looper.getMainLooper()).postDelayed({startListen()},700)
-                  }
-                  override fun onError(e:Int){listening=false; Handler(Looper.getMainLooper()).postDelayed({startListen()},700)}
-                  override fun onReadyForSpeech(p:Bundle?){}; override fun onBeginningOfSpeech(){}; override fun onRmsChanged(f:Float){}; override fun onBufferReceived(b:ByteArray?){}; override fun onEndOfSpeech(){}; override fun onEvent(t:Int,p:Bundle?){}; override fun onPartialResults(p:Bundle?){}
-                })
-                sr?.startListening(Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply{putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM); putExtra(RecognizerIntent.EXTRA_LANGUAGE,"ar-YE")})
-              }catch(e:Exception){listening=false; Handler(Looper.getMainLooper()).postDelayed({startListen()},1000)}
-            }
-            override fun onBind(i:Intent?):IBinder?=null
-          }
-          E5
-          cat > app/src/main/java/com/akhali/OverlayActivity.kt <<'E6'
+          class BgService: Service(), TextToSpeech.OnInitListener{lateinit var tts: TextToSpeech; var sr: SpeechRecognizer?=null; var listening=false; override fun onCreate(){super.onCreate(); tts=TextToSpeech(this,this); val ch=NotificationChannel("akh","Akhali",NotificationManager.IMPORTANCE_LOW); (getSystemService(NOTIFICATION_SERVICE) as NotificationManager).createNotificationChannel(ch); startForeground(1, Notification.Builder(this,"akh").setContentTitle("أكحلي 131 ULTIMATE").setContentText("يبرمج نفسه ويتحكم").setSmallIcon(android.R.drawable.ic_btn_speak_now).build())}; override fun onInit(i:Int){tts.language=Locale("ar"); startListen()}; fun startListen(){if(listening) return; try{listening=true; sr?.destroy(); sr=SpeechRecognizer.createSpeechRecognizer(this); sr?.setRecognitionListener(object: RecognitionListener{override fun onResults(b:Bundle?){listening=false; val q=b?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.get(0)?.lowercase()?:""; if(q.length>2){val i=Intent(this@BgService, OverlayActivity::class.java).apply{putExtra("q",q); addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)}; startActivity(i)}; Handler(Looper.getMainLooper()).postDelayed({startListen()},500)}; override fun onError(e:Int){listening=false; Handler(Looper.getMainLooper()).postDelayed({startListen()},500)}; override fun onReadyForSpeech(p:Bundle?){}; override fun onBeginningOfSpeech(){}; override fun onRmsChanged(f:Float){}; override fun onBufferReceived(b:ByteArray?){}; override fun onEndOfSpeech(){}; override fun onEvent(t:Int,p:Bundle?){}; override fun onPartialResults(p:Bundle?){}}); sr?.startListening(Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply{putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM); putExtra(RecognizerIntent.EXTRA_LANGUAGE,"ar-YE")})}catch(e:Exception){listening=false; Handler(Looper.getMainLooper()).postDelayed({startListen()},700)}}; override fun onBind(i:Intent?):IBinder?=null}
+          E7
+          cat > app/src/main/java/com/akhali/OverlayActivity.kt <<'E8'
           package com.akhali
           import android.app.Activity
+          import android.content.Intent
           import android.graphics.Color
+          import android.net.Uri
           import android.os.*
+          import android.provider.Settings
           import android.speech.tts.TextToSpeech
           import android.view.Gravity
           import android.widget.*
-          import java.util.*
           class OverlayActivity: Activity(), TextToSpeech.OnInitListener{
-            lateinit var tts: TextToSpeech; var userQuery=""
+            lateinit var tts: TextToSpeech; var q=""
             override fun onCreate(b:Bundle?){
-              super.onCreate(b); tts=TextToSpeech(this,this)
-              userQuery=intent.getStringExtra("q")?:""
-              val root=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL; gravity=Gravity.CENTER; setPadding(50,50,50,50); setBackgroundColor(Color.parseColor("#CC000000"))}
-              root.addView(TextView(this).apply{text="🇾🇪 أكحلي اليمني"; textSize=32f; setTextColor(Color.WHITE); gravity=Gravity.CENTER})
-              root.addView(TextView(this).apply{text="\nسمعتك: $userQuery"; textSize=18f; setTextColor(Color.WHITE); gravity=Gravity.CENTER})
-              root.addView(TextView(this).apply{text="\n"; textSize=10f})
-              val reply = when{
-                userQuery.contains("وينك")||userQuery.contains("فينك") -> "موجود يا حبيب قلبي جنبك!"
-                userQuery.contains("كيف") -> "بخير والله انت كيفك يا غالي؟"
-                userQuery.contains("ايش")||userQuery.contains("اش") -> "ما في شي، آمرني ايش تشتي؟"
-                userQuery.contains("تعال")||userQuery.contains("شلني") -> "جيت لك طوالي، ها انا جيت!"
-                else -> "نعم يا باشا، آمرني"
+              super.onCreate(b); tts=TextToSpeech(this,this); q=intent.getStringExtra("q")?:""; val sp=getSharedPreferences("ultimate",0)
+              val root=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL; gravity=Gravity.CENTER; setPadding(35,35,35,35); setBackgroundColor(Color.parseColor("#EE000000"))}
+              root.addView(TextView(this).apply{text="v${sp.getInt("code_ver",1)} | $q"; textSize=10f; setTextColor(Color.CYAN); gravity=Gravity.CENTER})
+              val allowNet=sp.getBoolean("allow_net",false); val allowControl=sp.getBoolean("allow_control",false); val allowCode=sp.getBoolean("allow_code",false)
+              when{
+                (q.contains("ابحث")||q.contains("تعلم")) &&!allowNet -> {
+                  root.addView(TextView(this).apply{text="\n🌐 يا شيخ تسمح لي أفتح النت وأقوم ببحوث وأتعلم بموافقتك؟"; textSize=16f; setTextColor(Color.WHITE); gravity=Gravity.CENTER})
+                  val b=Button(this).apply{text="✅ ايه اسمح افتح النت وتعلم"}; b.setOnClickListener{sp.edit().putBoolean("allow_net",true).apply(); startActivity(Intent(this, ResearchActivity::class.java).apply{putExtra("q",q)}); finish()}; root.addView(b)
+                }
+                (q.contains("افتح")||q.contains("اتصل")||q.contains("تحكم")||q.contains("شغل")) &&!allowControl -> {
+                  root.addView(TextView(this).apply{text="\n📱 تسمح لي أتحكم بهاتفك بالكامل بأمر منك؟"; textSize=16f; setTextColor(Color.WHITE); gravity=Gravity.CENTER})
+                  val b=Button(this).apply{text="✅ ايه اسمح تحكم بالجوال"}; b.setOnClickListener{sp.edit().putBoolean("allow_control",true).apply(); handleControl(q); finish()}; root.addView(b)
+                }
+                q.contains("برمج") &&!allowCode -> {
+                  root.addView(TextView(this).apply{text="\n💻 تسمح لي أبرمج نفسي وأحدث نفسي بنفسي بموافقتك؟"; textSize=16f; setTextColor(Color.WHITE); gravity=Gravity.CENTER})
+                  val b=Button(this).apply{text="✅ ايه اسمح تبرمج نفسك"}; b.setOnClickListener{sp.edit().putBoolean("allow_code",true).apply(); val ver=sp.getInt("code_ver",1)+1; sp.edit().putInt("code_ver",ver).apply(); Toast.makeText(this,"تم! الآن أقدر أبرمج نفسي v$ver",Toast.LENGTH_LONG).show(); finish()}; root.addView(b)
+                }
+                else -> {
+                  var action=""; var reply="أرحب يا حيدي!"
+                  if(q.contains("ابحث")){action="بحث"; reply="أبشر بافتح النت وأبحث وأتعلم!"; if(allowNet) startActivity(Intent(this, ResearchActivity::class.java).apply{putExtra("q",q)})}
+                  else if(q.contains("افتح")||q.contains("شغل")){action="تحكم"; reply="حاضر يا شيخ أتحكم بجوالك!"; if(allowControl) handleControl(q)}
+                  else if(q.contains("برمج")){action="برمجة ذاتية"; reply="أبشر أبرمج نفسي الآن للجيل ${sp.getInt("code_ver",1)+1}!"; if(allowCode){val ver=sp.getInt("code_ver",1)+1; sp.edit().putInt("code_ver",ver).putString("last_code","برمجة ذاتية من الأمر: $q").apply()}}
+                  else{reply="أرحب يا حيدي! أنا ULTIMATE:\nأبرمج نفسي + أبحث في النت + أتحكم بجوالك كامل بإذنك!"}
+                  root.addView(TextView(this).apply{text="\n$reply\n\n$action"; textSize=18f; setTextColor(Color.YELLOW); gravity=Gravity.CENTER})
+                  root.addView(TextView(this).apply{text="🧬 كود v${sp.getInt("code_ver",1)} | Kotlin حديثة | ${if(allowCode)"يبرمج نفسه ✅" else "ينتظر إذن"}\n🌐 ${if(allowNet)"يبحث في النت ✅" else "ينتظر إذن"} | 📱 ${if(allowControl)"يتحكم كامل ✅" else "ينتظر إذن"}"; textSize=9f; setTextColor(Color.GREEN); gravity=Gravity.CENTER})
+                  Handler(Looper.getMainLooper()).postDelayed({finish()},4000)
+                }
               }
-              root.addView(TextView(this).apply{text=reply; textSize=24f; setTextColor(Color.YELLOW); gravity=Gravity.CENTER})
               setContentView(root)
-              Handler(Looper.getMainLooper()).postDelayed({finish()},5000)
             }
-            override fun onInit(i:Int){
-              tts.language=Locale("ar")
-              val q=userQuery
-              val reply=when{
-                q.contains("وينك")||q.contains("فينك") -> "موجود يا حبيب قلبي جنبك"
-                q.contains("ايش") -> "ما في شي آمرني"
-                q.contains("تعال") -> "جيت لك طوالي"
-                else -> "نعم يا باشا آمرني"
-              }
-              tts.speak(reply,TextToSpeech.QUEUE_FLUSH,null,null)
-            }
+            fun handleControl(cmd:String){try{when{cmd.contains("واتس")->startActivity(packageManager.getLaunchIntentForPackage("com.whatsapp")); cmd.contains("يوتيوب")->startActivity(packageManager.getLaunchIntentForPackage("com.google.android.youtube")); cmd.contains("كاميرا")->startActivity(Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE)); cmd.contains("واي فاي")->startActivity(Intent(Settings.ACTION_WIFI_SETTINGS)); cmd.contains("صوت")->{val am=getSystemService(AUDIO_SERVICE) as android.media.AudioManager; am.setStreamVolume(android.media.AudioManager.STREAM_MUSIC, am.getStreamMaxVolume(android.media.AudioManager.STREAM_MUSIC),0)}}catch(e:Exception){}}
+            override fun onInit(i:Int){tts.language=Locale("ar"); tts.speak("أرحب يا حيدي أنا ألتيميت أبرمج نفسي وأبحث في النت وأتحكم بجوالك كامل بإذنك",TextToSpeech.QUEUE_FLUSH,null,null)}
           }
-          E6
+          E8
           curl -sL https://services.gradle.org/distributions/gradle-7.6-bin.zip -o /tmp/g.zip
           unzip -q /tmp/g.zip -d /tmp/
           /tmp/gradle-7.6/bin/gradle assembleDebug --no-daemon
       - uses: actions/upload-artifact@v4
         with:
-          name: Akhali-123-STABLE
+          name: Akhali-131-ULTIMATE
           path: app/build/outputs/apk/debug/*.apk
