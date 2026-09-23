@@ -9,28 +9,39 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-      - name: Build 167 VOICE CHOOSER + HOTWORD
+      - name: Build 168 FIXED VOICE + HOTWORD YA AKHALI
         shell: bash
         run: |
           set -e
-          set -x
+          echo "=== START BUILD 168 YA AKHALI ==="
           rm -rf build.gradle app/build.gradle settings.gradle gradle.properties gradle
           mkdir -p gradle/wrapper app/src/main/java/com/akhali app/src/main/res/xml
           echo "include ':app'" > settings.gradle
           echo "android.useAndroidX=true" > gradle.properties
           echo "distributionUrl=https\://services.gradle.org/distributions/gradle-7.6-bin.zip" > gradle/wrapper/gradle-wrapper.properties
-          cat > build.gradle <<'B'
+          cat > build.gradle <<'BUILDGRADLE_EOF'
           buildscript {
-              repositories { google(); mavenCentral() }
+              repositories {
+                  google()
+                  mavenCentral()
+              }
               dependencies {
                   classpath 'com.android.tools.build:gradle:7.4.2'
                   classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.20'
               }
           }
-          allprojects { repositories { google(); mavenCentral() } }
-          B
-          cat > app/build.gradle <<'A'
-          plugins { id 'com.android.application'; id 'org.jetbrains.kotlin.android' }
+          allprojects {
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+          }
+          BUILDGRADLE_EOF
+          cat > app/build.gradle <<'APPGRADLE_EOF'
+          plugins {
+              id 'com.android.application'
+              id 'org.jetbrains.kotlin.android'
+          }
           android {
               namespace 'com.akhali'
               compileSdk 33
@@ -38,21 +49,23 @@ jobs:
                   applicationId "com.akhali.yemeni"
                   minSdk 21
                   targetSdk 28
-                  versionCode 167
-                  versionName "167"
+                  versionCode 168
+                  versionName "168"
               }
           }
-          dependencies { implementation 'androidx.core:core-ktx:1.6.0' }
-          A
-          cat > app/src/main/res/xml/access.xml <<'X'
+          dependencies {
+              implementation 'androidx.core:core-ktx:1.6.0'
+          }
+          APPGRADLE_EOF
+          cat > app/src/main/res/xml/access.xml <<'ACCESS_EOF'
           <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
               android:accessibilityEventTypes="typeAllMask"
               android:accessibilityFlags="flagDefault|flagRetrieveInteractiveWindows"
               android:canPerformGestures="true"
               android:canRetrieveWindowContent="true"
               android:accessibilityFeedbackType="feedbackSpoken"/>
-          X
-          cat > app/src/main/AndroidManifest.xml <<'M'
+          ACCESS_EOF
+          cat > app/src/main/AndroidManifest.xml <<'MANIFEST_EOF'
           <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.akhali.yemeni">
           <uses-permission android:name="android.permission.RECORD_AUDIO"/>
           <uses-permission android:name="android.permission.INTERNET"/>
@@ -70,8 +83,8 @@ jobs:
           <service android:name=".BgService" android:exported="false"/>
           <service android:name=".SmartControlService" android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE" android:exported="true"><intent-filter><action android:name="android.accessibilityservice.AccessibilityService"/></intent-filter><meta-data android:name="android.accessibilityservice" android:resource="@xml/access"/></service>
           </application></manifest>
-          M
-          cat > app/src/main/java/com/akhali/MainActivity.kt <<'K'
+          MANIFEST_EOF
+          cat > app/src/main/java/com/akhali/MainActivity.kt <<'MAIN_EOF'
           package com.akhali
           import android.app.Activity
           import android.app.AlertDialog
@@ -97,7 +110,7 @@ jobs:
               pitch=sp.getFloat("pitch",1.05f);rate=sp.getFloat("rate",0.93f)
               val lay=LinearLayout(this);lay.orientation=LinearLayout.VERTICAL;lay.setPadding(20,20,20,20)
               val tv=TextView(this);tv.textSize=13f
-              fun ref(){tv.text="الاكحلي v167\nالصوت الحالي: نبرة $pitch سرعة $rate\nقول يا اكحلي حتى والشاشة مقفلة\nما ينفذ الا باذنك"}
+              fun ref(){tv.text="الاكحلي v168\nالصوت الحالي: نبرة $pitch سرعة $rate\nقول يا اكحلي حتى والشاشة مقفلة\nما ينفذ الا باذنك"}
               ref()
               fun ask(t:String, y:()->Unit){AlertDialog.Builder(this).setTitle("اذن؟").setMessage(t).setPositiveButton("اسمح"){_,_->y()}.setNegativeButton("لا",null).show()}
               fun saveVoice(p:Float, r:Float, name:String){
@@ -107,50 +120,4 @@ jobs:
                 ref()
               }
               val bSiri=Button(this);bSiri.text="صوت سيري ناعم (1.05)"
-              val bYemeni=Button(this);bYemeni.text="صوت يمني رجولي فخم (0.85)"
-              val bDeep=Button(this);bDeep.text="صوت جهوري ثقيل (0.75)"
-              val bNormal=Button(this);bNormal.text="صوت طبيعي عادي (1.0)"
-              bSiri.setOnClickListener{saveVoice(1.05f,0.93f,"ناعم مثل سيري")}
-              bYemeni.setOnClickListener{saveVoice(0.85f,0.95f,"يمني رجولي فخم")}
-              bDeep.setOnClickListener{saveVoice(0.75f,0.90f,"جهوري ثقيل")}
-              bNormal.setOnClickListener{saveVoice(1.0f,1.0f,"طبيعي")}
-              val b4=Button(this);b4.text="4- شغل الاكحلي يسمع لحاله يا اكحلي حتى والشاشة مقفلة"
-              val b2=Button(this);b2.text="2- اسمح بالتحكم الكامل"
-              val b3=Button(this);b3.text="3- اسمح يطفو"
-              b2.setOnClickListener{startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))}
-              b3.setOnClickListener{if(Build.VERSION.SDK_INT>=23 &&!Settings.canDrawOverlays(this)){startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")))}}
-              b4.setOnClickListener{val i=Intent(this,BgService::class.java);if(Build.VERSION.SDK_INT>=26) startForegroundService(i) else startService(i)}
-              lay.addView(tv);lay.addView(bSiri);lay.addView(bYemeni);lay.addView(bDeep);lay.addView(bNormal);lay.addView(b4);lay.addView(b2);lay.addView(b3);setContentView(lay)
-            }
-            override fun onInit(s:Int){
-              if(s==TextToSpeech.SUCCESS){
-                tts?.language=Locale("ar");tts?.setPitch(pitch);tts?.setSpeechRate(rate)
-                try{if(Build.VERSION.SDK_INT>=21){var best:Voice?=null;for(v in tts?.voices!!){if(v.locale.language=="ar"){if(best==null||v.quality>best.quality) best=v}};if(best!=null) tts?.voice=best}}catch(e:Exception){}
-              }
-            }
-          }
-          K
-          cat > app/src/main/java/com/akhali/LabActivity.kt <<'K2'
-          package com.akhali
-          import android.app.Activity
-          import android.os.Bundle
-          import android.widget.TextView
-          class LabActivity:Activity(){
-            override fun onCreate(b:Bundle?){
-              super.onCreate(b)
-              val tv=TextView(this);tv.text="معمل الاكحلي v167 - قول يا اكحلي حتى والشاشة مقفلة";setContentView(tv)
-            }
-          }
-          K2
-          cat > app/src/main/java/com/akhali/SmartControlService.kt <<'K3'
-          package com.akhali
-          import android.accessibilityservice.AccessibilityService
-          import android.view.accessibility.AccessibilityEvent
-          class SmartControlService:AccessibilityService(){
-            companion object{var instance:SmartControlService?=null}
-            override fun onServiceConnected(){super.onServiceConnected();instance=this}
-            override fun onAccessibilityEvent(e:AccessibilityEvent?){}
-            override fun onInterrupt(){}
-            fun readScreen():String{
-              val root=rootInActiveWindow?: return "ما في شاشة"
-              var txt="";fun read(n:android.view.accessibility.AccessibilityNodeInfo){if(n.text!=null) txt+=n.text.toString()+"
+              val bYemeni=Button(this);bYem
