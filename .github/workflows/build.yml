@@ -6,11 +6,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
-        with: { distribution: temurin, java-version: 17 }
-      - name: Build 154 ALAKHALY NAME FIX
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: Build 160 ULTIMATE ALL FEATURES ASK PERMISSION
         run: |
           rm -rf build.gradle app/build.gradle settings.gradle gradle.properties gradle
-          mkdir -p gradle/wrapper app/src/main/java/com/akhali
+          mkdir -p gradle/wrapper app/src/main/java/com/akhali app/src/main/res/xml
           echo "include ':app'" > settings.gradle
           echo "android.useAndroidX=true" > gradle.properties
           echo "distributionUrl=https\://services.gradle.org/distributions/gradle-7.6-bin.zip" > gradle/wrapper/gradle-wrapper.properties
@@ -44,108 +46,43 @@ jobs:
                   applicationId "com.akhali.yemeni"
                   minSdk 21
                   targetSdk 28
-                  versionCode 154
-                  versionName "154"
+                  versionCode 160
+                  versionName "160"
               }
           }
           dependencies {
               implementation 'androidx.core:core-ktx:1.6.0'
           }
           A
+          cat > app/src/main/res/xml/access.xml <<'X'
+          <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+              android:accessibilityEventTypes="typeAllMask"
+              android:accessibilityFlags="flagDefault|flagRetrieveInteractiveWindows"
+              android:canPerformGestures="true"
+              android:canRetrieveWindowContent="true"
+              android:accessibilityFeedbackType="feedbackSpoken"/>
+          X
           cat > app/src/main/AndroidManifest.xml <<'M'
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.akhali.yemeni"><uses-permission android:name="android.permission.RECORD_AUDIO"/><uses-permission android:name="android.permission.INTERNET"/><uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/><application android:label="الاكحلي"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity><activity android:name=".LabActivity" android:exported="false"/><service android:name=".BgService" android:exported="false"/></application></manifest>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.akhali.yemeni">
+          <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+          <uses-permission android:name="android.permission.INTERNET"/>
+          <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+          <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+          <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
+          <uses-permission android:name="android.permission.SEND_SMS"/>
+          <uses-permission android:name="android.permission.READ_SMS"/>
+          <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+          <uses-permission android:name="android.permission.BIND_ACCESSIBILITY_SERVICE"/>
+          <application android:label="الاكحلي الذكي">
+          <activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity>
+          <activity android:name=".LabActivity" android:exported="false"/>
+          <service android:name=".BgService" android:exported="false"/>
+          <service android:name=".SmartControlService" android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE" android:exported="true"><intent-filter><action android:name="android.accessibilityservice.AccessibilityService"/></intent-filter><meta-data android:name="android.accessibilityservice" android:resource="@xml/access"/></service>
+          </application></manifest>
           M
           cat > app/src/main/java/com/akhali/MainActivity.kt <<'K'
           package com.akhali
           import android.app.Activity
-          import android.content.Intent
-          import android.os.Bundle
-          import android.widget.Button
-          import android.widget.LinearLayout
-          import android.widget.TextView
-          class MainActivity:Activity(){
-            override fun onCreate(b:Bundle?){
-              super.onCreate(b)
-              val sp=getSharedPreferences("ultimate",0)
-              val lay=LinearLayout(this);lay.orientation=LinearLayout.VERTICAL;lay.setPadding(30,30,30,30)
-              val tv=TextView(this)
-              tv.text="حيا بالاكحلي!\nالاصدار ${sp.getInt("ver",1)}\nالنت=${sp.getBoolean("allow_net",false)}\nالتحكم=${sp.getBoolean("allow_control",false)}"
-              val b1=Button(this);b1.text="اسمح له يشل من النت"
-              val b2=Button(this);b2.text="اسمح له يتحكم"
-              val b3=Button(this);b3.text="افتح معمل الاكحلي يحدث نفسه بنفسه"
-              b1.setOnClickListener{sp.edit().putBoolean("allow_net",true).apply();recreate()}
-              b2.setOnClickListener{sp.edit().putBoolean("allow_control",true).apply();recreate()}
-              b3.setOnClickListener{startActivity(Intent(this,LabActivity::class.java))}
-              lay.addView(tv);lay.addView(b1);lay.addView(b2);lay.addView(b3);setContentView(lay)
-            }
-          }
-          K
-          cat > app/src/main/java/com/akhali/LabActivity.kt <<'K2'
-          package com.akhali
-          import android.app.Activity
-          import android.os.Build
-          import android.os.Bundle
-          import android.widget.Button
-          import android.widget.LinearLayout
-          import android.widget.TextView
-          import android.widget.Toast
-          import java.util.Date
-          class LabActivity:Activity(){
-            override fun onCreate(b:Bundle?){
-              super.onCreate(b)
-              val sp=getSharedPreferences("ultimate",0)
-              val lay=LinearLayout(this);lay.orientation=LinearLayout.VERTICAL;lay.setPadding(20,20,20,20)
-              val tv=TextView(this);tv.textSize=13f
-              fun refreshLab(){
-                val ver=sp.getInt("ver",1)
-                val all=sp.all.entries.joinToString("\n"){it.key+" = "+it.value}
-                tv.text="معمل الاكحلي - يحدث نفسه بنفسه v$ver\n\nالمنفذ 1 [الجهاز]: ${Build.MODEL}\nالمنفذ 2 [الوقت]: ${Date()}\nالمنفذ 3 [الذاكرة]: ${sp.all.size} دوال\n\nاللي تعلمه الاكحلي لحاله:\n$all"
-              }
-              refreshLab()
-              val b1=Button(this);b1.text="خلي الاكحلي يشل من عدة منافذ ويبرمج نفسه"
-              val b2=Button(this);b2.text="خلي الاكحلي يتعلم من النت لحاله"
-              b1.setOnClickListener{
-                Thread{
-                  try{
-                    val info1="جهاز:${Build.MODEL}"
-                    val info2="وقت:${System.currentTimeMillis()}"
-                    var info3="نت:مغلق"
-                    if(sp.getBoolean("allow_net",false)){
-                      try{info3="نت:"+java.net.URL("https://worldtimeapi.org/api/ip").readText().take(80)}catch(e:Exception){info3="نت:ما قدر"}
-                    }
-                    val ver=sp.getInt("ver",1)+1
-                    val newFunc="تعلم من [$info1 | $info2 | $info3]"
-                    sp.edit().putInt("ver",ver).putString("دالة_الاكحلي_$ver",newFunc).apply()
-                    runOnUiThread{refreshLab();Toast.makeText(this,"الاكحلي قده اتعلم لحاله! v$ver",Toast.LENGTH_LONG).show()}
-                  }catch(e:Exception){}
-                }.start()
-              }
-              b2.setOnClickListener{
-                Thread{
-                  try{
-                    if(!sp.getBoolean("allow_net",false)){runOnUiThread{Toast.makeText(this,"يا اكحلي اسمح بالنت اول!",Toast.LENGTH_SHORT).show()};return@Thread}
-                    val joke=java.net.URL("https://api.github.com/zen").readText()
-                    val ver=sp.getInt("ver",1)+1
-                    sp.edit().putInt("ver",ver).putString("حكمة_الاكحلي_$ver",joke).apply()
-                    runOnUiThread{refreshLab();Toast.makeText(this,"الاكحلي شل حكمة: $joke",Toast.LENGTH_LONG).show()}
-                  }catch(e:Exception){}
-                }.start()
-              }
-              lay.addView(tv);lay.addView(b1);lay.addView(b2);setContentView(lay)
-            }
-          }
-          K2
-          cat > app/src/main/java/com/akhali/BgService.kt <<'K3'
-          package com.akhali
-          import android.app.Service
-          import android.content.Intent
-          import android.os.IBinder
-          class BgService:Service(){override fun onBind(i:Intent?):IBinder?=null}
-          K3
-          curl -sL https://services.gradle.org/distributions/gradle-7.6-bin.zip -o /tmp/g.zip
-          unzip -q /tmp/g.zip -d /tmp/
-          /tmp/gradle-7.6/bin/gradle assembleDebug --no-daemon
-      - uses: actions/upload-artifact@v4
-        with:
-          name: APK-154-ALAKHALY
-          path: app/build/outputs/apk/debug/*.apk
+          import android.app.AlertDialog
+          import android.app.DownloadManager
+          import android.content.ClipData
