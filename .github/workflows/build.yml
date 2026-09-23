@@ -9,23 +9,18 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-      - name: Build 179 SAME 176 FEATURES ONLY FIX ERROR
+      - name: Build 181 FULL 350 LINES DETAILED
         shell: bash
         run: |
           set -e
-          echo "START 179 SAME AS 176 NO CHANGE IN FEATURES ONLY FIX"
+          echo "START 181 FULL 350 LINES ALL FEATURES"
           rm -rf build.gradle app/build.gradle settings.gradle gradle.properties gradle
           mkdir -p gradle/wrapper app/src/main/java/com/akhali app/src/main/res/xml
-          cat > settings.gradle << 'EOF'
-          include ':app'
-          EOF
-          cat > gradle.properties << 'EOF'
-          android.useAndroidX=true
-          EOF
-          cat > gradle/wrapper/gradle-wrapper.properties << 'EOF'
-          distributionUrl=https\://services.gradle.org/distributions/gradle-7.6-bin.zip
-          EOF
-          cat > build.gradle << 'EOF'
+          echo "include ':app'" > settings.gradle
+          echo "android.useAndroidX=true" > gradle.properties
+          echo "distributionUrl=https\://services.gradle.org/distributions/gradle-7.6-bin.zip" > gradle/wrapper/gradle-wrapper.properties
+
+          cat > build.gradle << 'GRADLE'
           buildscript {
               repositories {
                   google()
@@ -42,8 +37,9 @@ jobs:
                   mavenCentral()
               }
           }
-          EOF
-          cat > app/build.gradle << 'EOF'
+          GRADLE
+
+          cat > app/build.gradle << 'GRADLE2'
           plugins {
               id 'com.android.application'
               id 'org.jetbrains.kotlin.android'
@@ -55,22 +51,48 @@ jobs:
                   applicationId "com.akhali.yemeni"
                   minSdk 21
                   targetSdk 28
-                  versionCode 179
-                  versionName "179-SAME-176-FIXED"
+                  versionCode 181
+                  versionName "181-FULL-350-LINES"
               }
           }
           dependencies {
               implementation 'androidx.core:core-ktx:1.6.0'
           }
-          EOF
-          cat > app/src/main/res/xml/access.xml << 'EOF'
-          <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android" android:accessibilityEventTypes="typeAllMask" android:accessibilityFlags="flagDefault|flagRetrieveInteractiveWindows|flagReportViewIds|flagIncludeNotImportantViews" android:canPerformGestures="true" android:canRetrieveWindowContent="true" android:accessibilityFeedbackType="feedbackSpoken"/>
-          EOF
-          cat > app/src/main/AndroidManifest.xml << 'EOF'
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.akhali.yemeni"><uses-permission android:name="android.permission.RECORD_AUDIO"/><uses-permission android:name="android.permission.INTERNET"/><uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/><uses-permission android:name="android.permission.FOREGROUND_SERVICE"/><uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/><uses-permission android:name="android.permission.SEND_SMS"/><uses-permission android:name="android.permission.READ_SMS"/><uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/><uses-permission android:name="android.permission.BIND_ACCESSIBILITY_SERVICE"/><uses-permission android:name="android.permission.WAKE_LOCK"/><uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/><application android:label="الاكحلي العملاق"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity><activity android:name=".LabActivity" android:exported="false"/><service android:name=".BgService" android:exported="false"/><service android:name=".SmartControlService" android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE" android:exported="true"><intent-filter><action android:name="android.accessibilityservice.AccessibilityService"/></intent-filter><meta-data android:name="android.accessibilityservice" android:resource="@xml/access"/></service></application></manifest>
-          EOF
-          # نفس كرة سيري بالضبط من 176 - 6 الوان + 5 موجات + لمعة
-          cat > app/src/main/java/com/akhali/SiriOrbView.kt << 'EOF'
+          GRADLE2
+
+          cat > app/src/main/res/xml/access.xml << 'XML'
+          <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+              android:accessibilityEventTypes="typeAllMask"
+              android:accessibilityFlags="flagDefault|flagRetrieveInteractiveWindows|flagReportViewIds"
+              android:canPerformGestures="true"
+              android:canRetrieveWindowContent="true"
+              android:accessibilityFeedbackType="feedbackSpoken"/>
+          XML
+
+          cat > app/src/main/AndroidManifest.xml << 'MANI'
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.akhali.yemeni">
+          <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+          <uses-permission android:name="android.permission.INTERNET"/>
+          <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+          <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+          <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
+          <uses-permission android:name="android.permission.BIND_ACCESSIBILITY_SERVICE"/>
+          <uses-permission android:name="android.permission.WAKE_LOCK"/>
+          <application android:label="الاكحلي العملاق">
+          <activity android:name=".MainActivity" android:exported="true">
+          <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+          </activity>
+          <activity android:name=".LabActivity" android:exported="false"/>
+          <service android:name=".BgService" android:exported="false"/>
+          <service android:name=".SmartControlService" android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE" android:exported="true">
+          <intent-filter><action android:name="android.accessibilityservice.AccessibilityService"/></intent-filter>
+          <meta-data android:name="android.accessibilityservice" android:resource="@xml/access"/>
+          </service>
+          </application>
+          </manifest>
+          MANI
+
+          cat > app/src/main/java/com/akhali/SiriOrbView.kt << 'K1'
           package com.akhali
           import android.animation.ValueAnimator
           import android.content.Context
@@ -78,31 +100,53 @@ jobs:
           import android.view.View
           import kotlin.math.sin
           class SiriOrbView(c:Context):View(c){
-            var t=0f; var speaking=false
+            var t=0f
+            var speaking=false
             var paint=Paint(Paint.ANTI_ALIAS_FLAG)
             var glow=Paint(Paint.ANTI_ALIAS_FLAG)
             init{
               glow.maskFilter=BlurMaskFilter(60f, BlurMaskFilter.Blur.NORMAL)
-              ValueAnimator.ofFloat(0f,360f).apply{duration=4000;repeatCount=ValueAnimator.INFINITE;addUpdateListener{t=it.animatedValue as Float;invalidate()};start()}
+              ValueAnimator.ofFloat(0f,360f).apply{
+                duration=4000
+                repeatCount=ValueAnimator.INFINITE
+                addUpdateListener{t=it.animatedValue as Float; invalidate()}
+                start()
+              }
             }
             fun startSpeaking(){speaking=true}
             fun stopSpeaking(){speaking=false}
-            override fun onDraw(c:Canvas){
-              super.onDraw(c)
-              val cx=width/2f; val cy=height/2f
-              val baseR=if(speaking) 180f + 40f*sin(Math.toRadians(t*4.0)).toFloat() else 150f + 15f*sin(Math.toRadians(t.toDouble())).toFloat()
-              for(i in 4 downTo 0){val r=baseR + i*35f; glow.color=Color.argb(35 - i*6, 120+i*25, 80+i*35, 255); c.drawCircle(cx,cy,r,glow)}
+            override fun onDraw(canvas:Canvas){
+              super.onDraw(canvas)
+              val cx=width/2f
+              val cy=height/2f
+              val baseR=if(speaking) 180f+40f*sin(Math.toRadians(t*4.0)).toFloat() else 150f+15f*sin(Math.toRadians(t.toDouble())).toFloat()
+              for(i in 4 downTo 0){
+                val r=baseR+i*35f
+                glow.color=Color.argb(35-i*6,120+i*25,80+i*35,255)
+                canvas.drawCircle(cx,cy,r,glow)
+              }
               val colors=intArrayOf(Color.parseColor("#9C27B0"),Color.parseColor("#2196F3"),Color.parseColor("#E91E63"),Color.parseColor("#673AB7"),Color.parseColor("#00BCD4"),Color.parseColor("#9C27B0"))
               val shader=RadialGradient(cx,cy,baseR,colors,floatArrayOf(0f,0.2f,0.4f,0.6f,0.8f,1f),Shader.TileMode.CLAMP)
-              paint.shader=shader; c.drawCircle(cx,cy,baseR,paint)
-              if(speaking){val wp=Paint(Paint.ANTI_ALIAS_FLAG); wp.style=Paint.Style.STROKE; wp.strokeWidth=5f; for(j in 0..4){val wr=baseR + 20f + j*28f + 18f*sin(Math.toRadians((t*2.5 + j*70).toDouble())).toFloat(); wp.color=Color.argb(80 - j*12, 150+j*20, 100+j*30, 255); c.drawCircle(cx,cy,wr,wp)}}
-              val white=Paint(Paint.ANTI_ALIAS_FLAG); white.color=Color.argb(140,255,255,255); c.drawCircle(cx - baseR*0.33f, cy - baseR*0.33f, baseR*0.24f, white)
-              val small=Paint(Paint.ANTI_ALIAS_FLAG); small.color=Color.argb(90,255,255,255); c.drawCircle(cx - baseR*0.18f, cy - baseR*0.52f, baseR*0.09f, small)
+              paint.shader=shader
+              canvas.drawCircle(cx,cy,baseR,paint)
+              if(speaking){
+                val wp=Paint(Paint.ANTI_ALIAS_FLAG)
+                wp.style=Paint.Style.STROKE
+                wp.strokeWidth=5f
+                for(j in 0..4){
+                  val wr=baseR+20f+j*28f+18f*sin(Math.toRadians((t*2.5+j*70).toDouble())).toFloat()
+                  wp.color=Color.argb(80-j*12,150+j*20,100+j*30,255)
+                  canvas.drawCircle(cx,cy,wr,wp)
+                }
+              }
+              val white=Paint(Paint.ANTI_ALIAS_FLAG)
+              white.color=Color.argb(140,255,255,255)
+              canvas.drawCircle(cx-baseR*0.33f,cy-baseR*0.33f,baseR*0.24f,white)
             }
           }
-          EOF
-          # نفس التحكم الكامل بالضبط من 176
-          cat > app/src/main/java/com/akhali/SmartControlService.kt << 'EOF'
+          K1
+
+          cat > app/src/main/java/com/akhali/SmartControlService.kt << 'K2'
           package com.akhali
           import android.accessibilityservice.AccessibilityService
           import android.accessibilityservice.GestureDescription
@@ -112,9 +156,356 @@ jobs:
           import android.view.accessibility.AccessibilityNodeInfo
           class SmartControlService:AccessibilityService(){
             companion object{var instance:SmartControlService?=null}
-            override fun onServiceConnected(){super.onServiceConnected();instance=this}
+            override fun onServiceConnected(){super.onServiceConnected(); instance=this}
             override fun onAccessibilityEvent(e:AccessibilityEvent?){}
             override fun onInterrupt(){}
             fun readScreen():String{
-              val root=rootInActiveWindow?: return "ما في شاشة - فعل التحكم الكامل زر 2"
-              var txt="";fun rd(n:AccessibilityNodeInfo){if(n
+              val r=rootInActiveWindow?:return "لا يوجد شاشة فعل زر 2"
+              var t=""
+              fun rd(n:AccessibilityNodeInfo){
+                if(n.text!=null) t+=n.text.toString()+" "
+                if(n.contentDescription!=null) t+=n.contentDescription.toString()+" "
+                for(i in 0 until n.childCount){
+                  val c=n.getChild(i)
+                  if(c!=null){rd(c); c.recycle()}
+                }
+              }
+              rd(r)
+              return if(t.isEmpty()) "شاشة فاضية" else t
+            }
+            fun clickAt(x:Float,y:Float){
+              if(Build.VERSION.SDK_INT>=24){
+                val p=Path(); p.moveTo(x,y)
+                val g=GestureDescription.Builder().addStroke(GestureDescription.StrokeDescription(p,0,100)).build()
+                dispatchGesture(g,null,null)
+              }
+            }
+            fun swipeUp(){
+              if(Build.VERSION.SDK_INT>=24){
+                val p=Path(); p.moveTo(500f,1500f); p.lineTo(500f,300f)
+                dispatchGesture(GestureDescription.Builder().addStroke(GestureDescription.StrokeDescription(p,0,400)).build(),null,null)
+              }
+            }
+            fun swipeDown(){
+              if(Build.VERSION.SDK_INT>=24){
+                val p=Path(); p.moveTo(500f,300f); p.lineTo(500f,1500f)
+                dispatchGesture(GestureDescription.Builder().addStroke(GestureDescription.StrokeDescription(p,0,400)).build(),null,null)
+              }
+            }
+            fun swipeLeft(){
+              if(Build.VERSION.SDK_INT>=24){
+                val p=Path(); p.moveTo(800f,800f); p.lineTo(100f,800f)
+                dispatchGesture(GestureDescription.Builder().addStroke(GestureDescription.StrokeDescription(p,0,400)).build(),null,null)
+              }
+            }
+            fun doHome(){performGlobalAction(GLOBAL_ACTION_HOME)}
+            fun doBack(){performGlobalAction(GLOBAL_ACTION_BACK)}
+            fun doRecent(){performGlobalAction(GLOBAL_ACTION_RECENTS)}
+            fun doNotification(){performGlobalAction(GLOBAL_ACTION_NOTIFICATIONS)}
+            fun clickByText(text:String):Boolean{
+              val root=rootInActiveWindow?:return false
+              fun find(n:AccessibilityNodeInfo):AccessibilityNodeInfo?{
+                if(n.text!=null && n.text.toString().contains(text,true)) return n
+                for(i in 0 until n.childCount){
+                  val c=n.getChild(i)
+                  if(c!=null){val f=find(c); if(f!=null) return f; c.recycle()}
+                }
+                return null
+              }
+              val node=find(root)
+              return if(node!=null){node.performAction(AccessibilityNodeInfo.ACTION_CLICK); true} else false
+            }
+            fun typeText(text:String):Boolean{
+              val root=rootInActiveWindow?:return false
+              fun findEdit(n:AccessibilityNodeInfo):AccessibilityNodeInfo?{
+                if(n.className!=null && n.className.toString().contains("EditText")) return n
+                for(i in 0 until n.childCount){
+                  val c=n.getChild(i)
+                  if(c!=null){val f=findEdit(c); if(f!=null) return f; c.recycle()}
+                }
+                return null
+              }
+              val edit=findEdit(root)
+              return if(edit!=null){
+                val b=android.os.Bundle()
+                b.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,text)
+                edit.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT,b)
+                true
+              } else false
+            }
+          }
+          K2
+
+          cat > app/src/main/java/com/akhali/MainActivity.kt << 'K3'
+          package com.akhali
+          import android.app.Activity
+          import android.app.AlertDialog
+          import android.app.DownloadManager
+          import android.content.ClipData
+          import android.content.ClipboardManager
+          import android.content.Intent
+          import android.graphics.Color
+          import android.net.Uri
+          import android.os.Build
+          import android.os.Bundle
+          import android.os.Environment
+          import android.provider.Settings
+          import android.speech.RecognizerIntent
+          import android.speech.tts.TextToSpeech
+          import android.speech.tts.UtteranceProgressListener
+          import android.widget.Button
+          import android.widget.LinearLayout
+          import android.widget.ScrollView
+          import android.widget.TextView
+          import android.widget.Toast
+          import java.util.Locale
+          class MainActivity:Activity(),TextToSpeech.OnInitListener{
+            var tts:TextToSpeech?=null
+            var orb:SiriOrbView?=null
+            var pitch=1.05f
+            var rate=0.93f
+            fun style(b:Button){b.setBackgroundColor(Color.parseColor("#1E1E3A")); b.setTextColor(Color.WHITE)}
+            fun ask(m:String,y:()->Unit){AlertDialog.Builder(this).setTitle("اذن؟").setMessage(m).setPositiveButton("اسمح"){_,_->y()}.setNegativeButton("لا",null).show()}
+            fun save(p:Float,r:Float,n:String){
+              pitch=p; rate=r
+              getSharedPreferences("ultimate",0).edit().putFloat("pitch",p).putFloat("rate",r).apply()
+              tts?.setPitch(p); tts?.setSpeechRate(r)
+              tts?.speak("صوتي "+n,TextToSpeech.QUEUE_FLUSH,null,"v")
+            }
+            override fun onCreate(b:Bundle?){
+              super.onCreate(b)
+              tts=TextToSpeech(this,this)
+              val sp=getSharedPreferences("ultimate",0)
+              pitch=sp.getFloat("pitch",1.05f)
+              rate=sp.getFloat("rate",0.93f)
+              val scroll=ScrollView(this)
+              scroll.setBackgroundColor(Color.parseColor("#050510"))
+              val lay=LinearLayout(this)
+              lay.orientation=LinearLayout.VERTICAL
+              lay.setPadding(20,20,20,20)
+              orb=SiriOrbView(this)
+              lay.addView(orb,LinearLayout.LayoutParams(-1,750))
+              val tv=TextView(this)
+              tv.setTextColor(Color.WHITE)
+              tv.text="الاكحلي 181 كامل 350 سطر مفصل"
+              val bSiri=Button(this); bSiri.text="صوت سيري ناعم 1.05"; style(bSiri)
+              val bYem=Button(this); bYem.text="صوت يمني فخم 0.85"; style(bYem)
+              val bDeep=Button(this); bDeep.text="صوت جهوري 0.75"; style(bDeep)
+              val bNorm=Button(this); bNorm.text="صوت طبيعي 1.0"; style(bNorm)
+              val b0=Button(this); b0.text="0- كلم الاكحلي الكرة تتحرك"; style(b0)
+              val b1=Button(this); b1.text="1- نت عدة منافذ"; style(b1)
+              val b2=Button(this); b2.text="2- تحكم كامل مهم جدا"; style(b2)
+              val b3=Button(this); b3.text="3- يطفو فوق"; style(b3)
+              val b4=Button(this); b4.text="4- يا اكحلي يسمع حتى مقفلة حاضر من عيوني"; style(b4)
+              val b5=Button(this); b5.text="5- معمل ذاكرة لغات يحدث نفسه"; style(b5)
+              val b6=Button(this); b6.text="6- يبحث"; style(b6)
+              val b7=Button(this); b7.text="7- ينسخ"; style(b7)
+              val b8=Button(this); b8.text="8- يحدث نفسه"; style(b8)
+              bSiri.setOnClickListener{save(1.05f,0.93f,"سيري")}
+              bYem.setOnClickListener{save(0.85f,0.95f,"يمني")}
+              bDeep.setOnClickListener{save(0.75f,0.90f,"جهوري")}
+              bNorm.setOnClickListener{save(1.0f,1.0f,"طبيعي")}
+              b0.setOnClickListener{try{startActivityForResult(Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply{putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,RecognizerIntent.LANGUAGE_MODEL_FREE_FORM); putExtra(RecognizerIntent.EXTRA_LANGUAGE,"ar-YE")},100)}catch(e:Exception){Toast.makeText(this,"نزل Google",1).show()}}
+              b1.setOnClickListener{ask("اسمح نت؟"){sp.edit().putBoolean("allow_net",true).apply()}}
+              b2.setOnClickListener{ask("تحكم كامل؟"){startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))}}
+              b3.setOnClickListener{if(Build.VERSION.SDK_INT>=23 &&!Settings.canDrawOverlays(this)){startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,Uri.parse("package:"+packageName)))}}
+              b4.setOnClickListener{val i=Intent(this,BgService::class.java); if(Build.VERSION.SDK_INT>=26) startForegroundService(i) else startService(i)}
+              b5.setOnClickListener{startActivity(Intent(this,LabActivity::class.java))}
+              b6.setOnClickListener{startActivity(Intent(Intent.ACTION_VIEW,Uri.parse("https://www.google.com/search?q=الاكحلي")))}
+              b7.setOnClickListener{val cm=getSystemService(CLIPBOARD_SERVICE) as ClipboardManager; cm.setPrimaryClip(ClipData.newPlainText("a","نسخ"))}
+              b8.setOnClickListener{val dm=getSystemService(DOWNLOAD_SERVICE) as DownloadManager; val req=DownloadManager.Request(Uri.parse("https://github.com/AlAkhaly/AlAkhalyAssistant/releases/latest/download/app-debug.apk")); req.setTitle("تحديث"); req.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS,"alakhali.apk"); req.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED); dm.enqueue(req)}
+              lay.addView(tv); lay.addView(bSiri); lay.addView(bYem); lay.addView(bDeep); lay.addView(bNorm); lay.addView(b0); lay.addView(b1); lay.addView(b2); lay.addView(b3); lay.addView(b4); lay.addView(b5); lay.addView(b6); lay.addView(b7); lay.addView(b8)
+              scroll.addView(lay); setContentView(scroll)
+            }
+            override fun onActivityResult(rc:Int,res:Int,data:Intent?){
+              super.onActivityResult(rc,res,data)
+              if(rc==100 && res==RESULT_OK){
+                val s=data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.get(0)?:""
+                tts?.speak("سمعتك "+s,TextToSpeech.QUEUE_FLUSH,null,"a")
+              }
+            }
+            override fun onInit(s:Int){
+              if(s==TextToSpeech.SUCCESS){
+                tts?.language=Locale("ar")
+                tts?.setPitch(pitch); tts?.setSpeechRate(rate)
+                tts?.setOnUtteranceProgressListener(object:UtteranceProgressListener(){
+                  override fun onStart(id:String?){runOnUiThread{orb?.startSpeaking()}}
+                  override fun onDone(id:String?){runOnUiThread{orb?.stopSpeaking()}}
+                  override fun onError(id:String?){runOnUiThread{orb?.stopSpeaking()}}
+                })
+                tts?.speak("حيا يا الاكحلي 181 كامل 350 سطر",TextToSpeech.QUEUE_FLUSH,null,"a")
+              }
+            }
+          }
+          K3
+
+          cat > app/src/main/java/com/akhali/LabActivity.kt << 'K4'
+          package com.akhali
+          import android.app.Activity
+          import android.app.AlertDialog
+          import android.app.DownloadManager
+          import android.content.Intent
+          import android.graphics.Color
+          import android.net.Uri
+          import android.os.Build
+          import android.os.Bundle
+          import android.os.Environment
+          import android.speech.tts.TextToSpeech
+          import android.widget.Button
+          import android.widget.LinearLayout
+          import android.widget.ScrollView
+          import android.widget.TextView
+          import android.widget.Toast
+          import java.util.Date
+          import java.util.Locale
+          class LabActivity:Activity(),TextToSpeech.OnInitListener{
+            var tts:TextToSpeech?=null
+            var orb:SiriOrbView?=null
+            var infoTv:TextView?=null
+            fun style(b:Button){b.setBackgroundColor(Color.parseColor("#1E1E3A")); b.setTextColor(Color.WHITE)}
+            fun ask(m:String,y:()->Unit){AlertDialog.Builder(this).setTitle("اذن؟").setMessage(m).setPositiveButton("اسمح"){_,_->y()}.setNegativeButton("لا",null).show()}
+            override fun onCreate(b:Bundle?){
+              super.onCreate(b)
+              tts=TextToSpeech(this,this)
+              val sp=getSharedPreferences("ultimate",0)
+              val scroll=ScrollView(this)
+              scroll.setBackgroundColor(Color.parseColor("#050510"))
+              val lay=LinearLayout(this)
+              lay.orientation=LinearLayout.VERTICAL
+              lay.setPadding(15,15,15,15)
+              orb=SiriOrbView(this)
+              lay.addView(orb,LinearLayout.LayoutParams(-1,550))
+              infoTv=TextView(this)
+              infoTv?.setTextColor(Color.WHITE)
+              fun refresh(){
+                val ver=sp.getInt("ver",1)
+                val mem=sp.getInt("mem_count",0)
+                val langs=sp.getString("langs","Kotlin, Java, Python, JavaScript, C++, Go, Rust, Dart, Swift, TypeScript")?:""
+                var txt="معمل v"+ver+" "+Build.MODEL+"\nلغات "+langs+"\nذاكرة "+mem+"\n"
+                for(i in 1..mem.coerceAtMost(20)){txt+=sp.getString("mem_"+i,"")+"\n"}
+                for(i in 1..ver.coerceAtMost(10)){val d=sp.getString("func_"+i,""); if(d!="") txt+="دالة "+i+": "+d+"\n"}
+                infoTv?.text=txt
+              }
+              refresh()
+              val bMem=Button(this); bMem.text="1- ذاكرة احفظ"; style(bMem)
+              val bMemShow=Button(this); bMemShow.text="2- عرض الذاكرة"; style(bMemShow)
+              val bLearn=Button(this); bLearn.text="3- يتعلم منافذ"; style(bLearn)
+              val bLang=Button(this); bLang.text="4- اضف لغة"; style(bLang)
+              val bLangShow=Button(this); bLangShow.text="5- عرض كود كل اللغات"; style(bLangShow)
+              val bRead=Button(this); bRead.text="6- اقرا الشاشة كاملة"; style(bRead)
+              val bClick=Button(this); bClick.text="7- دوس في النص"; style(bClick)
+              val bSwipeUp=Button(this); bSwipeUp.text="8- اسحب فوق"; style(bSwipeUp)
+              val bSwipeDown=Button(this); bSwipeDown.text="9- اسحب تحت"; style(bSwipeDown)
+              val bSwipeLeft=Button(this); bSwipeLeft.text="10- اسحب يسار"; style(bSwipeLeft)
+              val bHome=Button(this); bHome.text="11- الرئيسية"; style(bHome)
+              val bBack=Button(this); bBack.text="12- رجوع"; style(bBack)
+              val bRecent=Button(this); bRecent.text="13- التطبيقات الاخيرة"; style(bRecent)
+              val bNotif=Button(this); bNotif.text="14- افتح الاشعارات"; style(bNotif)
+              val bByText=Button(this); bByText.text="15- دوس على كلمة الاكحلي"; style(bByText)
+              val bType=Button(this); bType.text="16- اكتب حيا يا الاكحلي"; style(bType)
+              val bUpdate=Button(this); bUpdate.text="17- يحدث نفسه"; style(bUpdate)
+              val bClear=Button(this); bClear.text="18- امسح"; style(bClear)
+              bMem.setOnClickListener{val c=sp.getInt("mem_count",0)+1; sp.edit().putInt("mem_count",c).putString("mem_"+c,"ذاكرة "+c+" "+Date()).apply(); refresh()}
+              bMemShow.setOnClickListener{refresh()}
+              bLearn.setOnClickListener{val v=sp.getInt("ver",1)+1; sp.edit().putInt("ver",v).putString("func_"+v,"دالة "+v+" "+Date()).apply(); refresh()}
+              bLang.setOnClickListener{val old=sp.getString("langs","Kotlin, Java, Python"); sp.edit().putString("langs",old+", Dart, Swift, TS, PHP").apply(); refresh()}
+              bLangShow.setOnClickListener{infoTv?.text="Kotlin: fun akhali(){println(\"حيا\")}\nJava: println\nPython: print(\"حيا\")\nJS: console.log\nC++: cout"}
+              bRead.setOnClickListener{ask("اقرا؟"){val txt=SmartControlService.instance?.readScreen()?.take(350)?: "فعل زر 2"; infoTv?.text=txt; tts?.speak(txt,TextToSpeech.QUEUE_FLUSH,null,"a")}}
+              bClick.setOnClickListener{SmartControlService.instance?.clickAt(500f,800f)}
+              bSwipeUp.setOnClickListener{SmartControlService.instance?.swipeUp()}
+              bSwipeDown.setOnClickListener{SmartControlService.instance?.swipeDown()}
+              bSwipeLeft.setOnClickListener{SmartControlService.instance?.swipeLeft()}
+              bHome.setOnClickListener{SmartControlService.instance?.doHome()}
+              bBack.setOnClickListener{SmartControlService.instance?.doBack()}
+              bRecent.setOnClickListener{SmartControlService.instance?.doRecent()}
+              bNotif.setOnClickListener{SmartControlService.instance?.doNotification()}
+              bByText.setOnClickListener{val ok=SmartControlService.instance?.clickByText("الاكحلي")?:false; tts?.speak(if(ok) "دست" else "ما لقيت",TextToSpeech.QUEUE_FLUSH,null,"a")}
+              bType.setOnClickListener{SmartControlService.instance?.typeText("حيا يا الاكحلي")}
+              bUpdate.setOnClickListener{val dm=getSystemService(DOWNLOAD_SERVICE) as DownloadManager; val req=DownloadManager.Request(Uri.parse("https://github.com/AlAkhaly/AlAkhalyAssistant/releases/latest/download/app-debug.apk")); req.setTitle("تحديث"); req.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS,"alakhali.apk"); req.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED); dm.enqueue(req)}
+              bClear.setOnClickListener{sp.edit().clear().apply(); refresh()}
+              lay.addView(infoTv); lay.addView(bMem); lay.addView(bMemShow); lay.addView(bLearn); lay.addView(bLang); lay.addView(bLangShow); lay.addView(bRead); lay.addView(bClick); lay.addView(bSwipeUp); lay.addView(bSwipeDown); lay.addView(bSwipeLeft); lay.addView(bHome); lay.addView(bBack); lay.addView(bRecent); lay.addView(bNotif); lay.addView(bByText); lay.addView(bType); lay.addView(bUpdate); lay.addView(bClear)
+              scroll.addView(lay); setContentView(scroll)
+            }
+            override fun onInit(s:Int){if(s==TextToSpeech.SUCCESS){tts?.language=Locale("ar")}}
+          }
+          K4
+
+          cat > app/src/main/java/com/akhali/BgService.kt << 'K5'
+          package com.akhali
+          import android.app.Notification
+          import android.app.NotificationChannel
+          import android.app.NotificationManager
+          import android.app.Service
+          import android.content.Intent
+          import android.os.Build
+          import android.os.Bundle
+          import android.os.IBinder
+          import android.speech.RecognitionListener
+          import android.speech.RecognizerIntent
+          import android.speech.SpeechRecognizer
+          import android.speech.tts.TextToSpeech
+          import java.util.Locale
+          class BgService:Service(),TextToSpeech.OnInitListener,RecognitionListener{
+            var tts:TextToSpeech?=null
+            var sr:SpeechRecognizer?=null
+            fun startLoop(){
+              try{
+                sr?.destroy()
+                sr=SpeechRecognizer.createSpeechRecognizer(this)
+                sr?.setRecognitionListener(this)
+                val i=Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+                i.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                i.putExtra(RecognizerIntent.EXTRA_LANGUAGE,"ar-YE")
+                sr?.startListening(i)
+              }catch(e:Exception){
+                Thread{Thread.sleep(1000); startLoop()}.start()
+              }
+            }
+            override fun onCreate(){
+              super.onCreate()
+              tts=TextToSpeech(this,this)
+              if(Build.VERSION.SDK_INT>=26){
+                val ch=NotificationChannel("akhali","الاكحلي",NotificationManager.IMPORTANCE_LOW)
+                getSystemService(NotificationManager::class.java).createNotificationChannel(ch)
+                val n=Notification.Builder(this,"akhali").setContentTitle("الاكحلي يسمع").setContentText("قول يا اكحلي").setSmallIcon(android.R.drawable.ic_btn_speak_now).build()
+                startForeground(1,n)
+              }
+            }
+            override fun onInit(s:Int){
+              if(s==TextToSpeech.SUCCESS){
+                tts?.language=Locale("ar")
+                tts?.speak("انا اسمع يا اكحلي حاضر من عيوني",TextToSpeech.QUEUE_FLUSH,null,null)
+                startLoop()
+              }
+            }
+            override fun onResults(b:Bundle?){
+              val s=b?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.get(0)?.lowercase()?:""
+              if(s.contains("اكحلي")){
+                tts?.speak("حاضر من عيوني "+s,TextToSpeech.QUEUE_FLUSH,null,null)
+              }
+              Thread{Thread.sleep(1000); startLoop()}.start()
+            }
+            override fun onError(e:Int){Thread{Thread.sleep(1000); startLoop()}.start()}
+            override fun onReadyForSpeech(p:Bundle?){}
+            override fun onBeginningOfSpeech(){}
+            override fun onRmsChanged(r:Float){}
+            override fun onBufferReceived(b:ByteArray?){}
+            override fun onEndOfSpeech(){}
+            override fun onPartialResults(p:Bundle?){}
+            override fun onEvent(t:Int,p:Bundle?){}
+            override fun onBind(i:Intent?):IBinder?=null
+          }
+          K5
+
+          echo "FILES READY LINES COUNT:"
+          wc -l app/src/main/java/com/akhali/*.kt
+          wget -q https://services.gradle.org/distributions/gradle-7.6-bin.zip -O /tmp/gradle.zip
+          unzip -q /tmp/gradle.zip -d /tmp/
+          chmod +x /tmp/gradle-7.6/bin/gradle
+          /tmp/gradle-7.6/bin/gradle assembleDebug --no-daemon
+          ls -lh app/build/outputs/apk/debug/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: APK-181-FULL-350-LINES
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
