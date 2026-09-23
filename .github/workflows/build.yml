@@ -7,7 +7,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: 17 }
-      - name: Build 153 YEMENI SELF LEARNING
+      - name: Build 154 ALAKHALY NAME FIX
         run: |
           rm -rf build.gradle app/build.gradle settings.gradle gradle.properties gradle
           mkdir -p gradle/wrapper app/src/main/java/com/akhali
@@ -44,8 +44,8 @@ jobs:
                   applicationId "com.akhali.yemeni"
                   minSdk 21
                   targetSdk 28
-                  versionCode 153
-                  versionName "153"
+                  versionCode 154
+                  versionName "154"
               }
           }
           dependencies {
@@ -53,7 +53,7 @@ jobs:
           }
           A
           cat > app/src/main/AndroidManifest.xml <<'M'
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.akhali.yemeni"><uses-permission android:name="android.permission.RECORD_AUDIO"/><uses-permission android:name="android.permission.INTERNET"/><uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/><application android:label="اخالي يمني"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity><activity android:name=".LabActivity" android:exported="false"/><service android:name=".BgService" android:exported="false"/></application></manifest>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.akhali.yemeni"><uses-permission android:name="android.permission.RECORD_AUDIO"/><uses-permission android:name="android.permission.INTERNET"/><uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/><application android:label="الاكحلي"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity><activity android:name=".LabActivity" android:exported="false"/><service android:name=".BgService" android:exported="false"/></application></manifest>
           M
           cat > app/src/main/java/com/akhali/MainActivity.kt <<'K'
           package com.akhali
@@ -69,10 +69,10 @@ jobs:
               val sp=getSharedPreferences("ultimate",0)
               val lay=LinearLayout(this);lay.orientation=LinearLayout.VERTICAL;lay.setPadding(30,30,30,30)
               val tv=TextView(this)
-              tv.text="حيا يا اخالي!\nالاصدار ${sp.getInt("ver",1)}\nالنت=${sp.getBoolean("allow_net",false)}\nالتحكم=${sp.getBoolean("allow_control",false)}"
+              tv.text="حيا بالاكحلي!\nالاصدار ${sp.getInt("ver",1)}\nالنت=${sp.getBoolean("allow_net",false)}\nالتحكم=${sp.getBoolean("allow_control",false)}"
               val b1=Button(this);b1.text="اسمح له يشل من النت"
               val b2=Button(this);b2.text="اسمح له يتحكم"
-              val b3=Button(this);b3.text="افتح المعمل حقه يحدث نفسه بنفسه"
+              val b3=Button(this);b3.text="افتح معمل الاكحلي يحدث نفسه بنفسه"
               b1.setOnClickListener{sp.edit().putBoolean("allow_net",true).apply();recreate()}
               b2.setOnClickListener{sp.edit().putBoolean("allow_control",true).apply();recreate()}
               b3.setOnClickListener{startActivity(Intent(this,LabActivity::class.java))}
@@ -99,11 +99,11 @@ jobs:
               fun refreshLab(){
                 val ver=sp.getInt("ver",1)
                 val all=sp.all.entries.joinToString("\n"){it.key+" = "+it.value}
-                tv.text="معمل اخالي - يحدث نفسه بنفسه v$ver\n\nالمنفذ 1 [الجهاز]: ${Build.MODEL} اندرويد ${Build.VERSION.RELEASE}\nالمنفذ 2 [الوقت]: ${Date()}\nالمنفذ 3 [الذاكرة]: ${sp.all.size} دوال محفوظة\n\nكل اللي تعلمه لحاله:\n$all"
+                tv.text="معمل الاكحلي - يحدث نفسه بنفسه v$ver\n\nالمنفذ 1 [الجهاز]: ${Build.MODEL}\nالمنفذ 2 [الوقت]: ${Date()}\nالمنفذ 3 [الذاكرة]: ${sp.all.size} دوال\n\nاللي تعلمه الاكحلي لحاله:\n$all"
               }
               refreshLab()
-              val b1=Button(this);b1.text="خليه يشل معلومة من عدة منافذ ويبرمج نفسه"
-              val b2=Button(this);b2.text="خليه يتعلم من النت لحاله"
+              val b1=Button(this);b1.text="خلي الاكحلي يشل من عدة منافذ ويبرمج نفسه"
+              val b2=Button(this);b2.text="خلي الاكحلي يتعلم من النت لحاله"
               b1.setOnClickListener{
                 Thread{
                   try{
@@ -111,24 +111,24 @@ jobs:
                     val info2="وقت:${System.currentTimeMillis()}"
                     var info3="نت:مغلق"
                     if(sp.getBoolean("allow_net",false)){
-                      try{info3="نت:"+java.net.URL("https://worldtimeapi.org/api/ip").readText().take(100)}catch(e:Exception){info3="نت:ما قدر يوصل ${e.message}"}
+                      try{info3="نت:"+java.net.URL("https://worldtimeapi.org/api/ip").readText().take(80)}catch(e:Exception){info3="نت:ما قدر"}
                     }
                     val ver=sp.getInt("ver",1)+1
                     val newFunc="تعلم من [$info1 | $info2 | $info3]"
-                    sp.edit().putInt("ver",ver).putString("دالة_يمنية_$ver",newFunc).apply()
-                    runOnUiThread{refreshLab();Toast.makeText(this,"قده اتعلم لحاله! زاد دالة جديدة v$ver",Toast.LENGTH_LONG).show()}
-                  }catch(e:Exception){runOnUiThread{Toast.makeText(this,"ما قدر: ${e.message}",Toast.LENGTH_SHORT).show()}}
+                    sp.edit().putInt("ver",ver).putString("دالة_الاكحلي_$ver",newFunc).apply()
+                    runOnUiThread{refreshLab();Toast.makeText(this,"الاكحلي قده اتعلم لحاله! v$ver",Toast.LENGTH_LONG).show()}
+                  }catch(e:Exception){}
                 }.start()
               }
               b2.setOnClickListener{
                 Thread{
                   try{
-                    if(!sp.getBoolean("allow_net",false)){runOnUiThread{Toast.makeText(this,"يا اخي اسمح له بالنت اول!",Toast.LENGTH_SHORT).show()};return@Thread}
+                    if(!sp.getBoolean("allow_net",false)){runOnUiThread{Toast.makeText(this,"يا اكحلي اسمح بالنت اول!",Toast.LENGTH_SHORT).show()};return@Thread}
                     val joke=java.net.URL("https://api.github.com/zen").readText()
                     val ver=sp.getInt("ver",1)+1
-                    sp.edit().putInt("ver",ver).putString("حكمة_من_النت_$ver",joke).apply()
-                    runOnUiThread{refreshLab();Toast.makeText(this,"شل حكمة من النت وتعلمها: $joke",Toast.LENGTH_LONG).show()}
-                  }catch(e:Exception){runOnUiThread{Toast.makeText(this,"النت ضعيف: ${e.message}",Toast.LENGTH_SHORT).show()}}
+                    sp.edit().putInt("ver",ver).putString("حكمة_الاكحلي_$ver",joke).apply()
+                    runOnUiThread{refreshLab();Toast.makeText(this,"الاكحلي شل حكمة: $joke",Toast.LENGTH_LONG).show()}
+                  }catch(e:Exception){}
                 }.start()
               }
               lay.addView(tv);lay.addView(b1);lay.addView(b2);setContentView(lay)
@@ -147,5 +147,5 @@ jobs:
           /tmp/gradle-7.6/bin/gradle assembleDebug --no-daemon
       - uses: actions/upload-artifact@v4
         with:
-          name: APK-153-YEMENI-SELF
+          name: APK-154-ALAKHALY
           path: app/build/outputs/apk/debug/*.apk
