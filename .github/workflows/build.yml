@@ -10,7 +10,9 @@ jobs:
           distribution: temurin
           java-version: 17
       - name: Build 163 REAL VOICE + LISTEN
+        shell: bash
         run: |
+          set -e
           set -x
           rm -rf build.gradle app/build.gradle settings.gradle gradle.properties gradle
           mkdir -p gradle/wrapper app/src/main/java/com/akhali app/src/main/res/xml
@@ -19,16 +21,27 @@ jobs:
           echo "distributionUrl=https\://services.gradle.org/distributions/gradle-7.6-bin.zip" > gradle/wrapper/gradle-wrapper.properties
           cat > build.gradle <<'B'
           buildscript {
-              repositories { google(); mavenCentral() }
+              repositories {
+                  google()
+                  mavenCentral()
+              }
               dependencies {
                   classpath 'com.android.tools.build:gradle:7.4.2'
                   classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.20'
               }
           }
-          allprojects { repositories { google(); mavenCentral() } }
+          allprojects {
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+          }
           B
           cat > app/build.gradle <<'A'
-          plugins { id 'com.android.application'; id 'org.jetbrains.kotlin.android' }
+          plugins {
+              id 'com.android.application'
+              id 'org.jetbrains.kotlin.android'
+          }
           android {
               namespace 'com.akhali'
               compileSdk 33
@@ -36,11 +49,13 @@ jobs:
                   applicationId "com.akhali.yemeni"
                   minSdk 21
                   targetSdk 28
-                  versionCode 163
-                  versionName "163"
+                  versionCode 164
+                  versionName "164"
               }
           }
-          dependencies { implementation 'androidx.core:core-ktx:1.6.0' }
+          dependencies {
+              implementation 'androidx.core:core-ktx:1.6.0'
+          }
           A
           cat > app/src/main/res/xml/access.xml <<'X'
           <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
@@ -98,7 +113,7 @@ jobs:
               val lay=LinearLayout(this);lay.orientation=LinearLayout.VERTICAL;lay.setPadding(20,20,20,20)
               val tv=TextView(this);tv.textSize=13f
               val tvChat=TextView(this);tvChat.textSize=14f;tvChat.text="قلت: --\nالاكحلي قال: --"
-              fun ref(){tv.text="الاكحلي الذكي الخارق v163\nصوت واقعي+يسمع ويرد\nLT اندرويد 9 - ما ينفذ الا باذنك\nالاصدار: ${sp.getInt("ver",1)}"}
+              fun ref(){tv.text="الاكحلي الذكي الخارق v164\nصوت واقعي+يسمع ويرد\nLT اندرويد 9 - ما ينفذ الا باذنك\nالاصدار: ${sp.getInt("ver",1)}"}
               ref()
               fun ask(title:String, onYes:()->Unit){AlertDialog.Builder(this).setTitle("يا الاكحلي اذن لي؟").setMessage(title).setPositiveButton("اسمح"){_,_->onYes()}.setNegativeButton("لا"){_,_->tts?.speak("تمام", TextToSpeech.QUEUE_FLUSH, null, null)}.show()}
               val bTalk=Button(this);bTalk.text="0- كلم الاكحلي (صوت واقعي) وهو يرد"
@@ -152,7 +167,6 @@ jobs:
             override fun onInit(s:Int){
               if(s==TextToSpeech.SUCCESS){
                 tts?.language=Locale("ar")
-                // صوت واقعي
                 tts?.setSpeechRate(0.90f)
                 tts?.setPitch(0.92f)
                 try{
@@ -160,7 +174,7 @@ jobs:
                     val voices=tts?.voices
                     var best:Voice?=null
                     for(v in voices!!){
-                      if(v.locale.language=="ar" && !v.isNetworkConnectionRequired){
+                      if(v.locale.language=="ar" &&!v.isNetworkConnectionRequired){
                         if(best==null || v.quality>best.quality) best=v
                       }
                     }
@@ -192,4 +206,103 @@ jobs:
               val sp=getSharedPreferences("ultimate",0)
               val lay=LinearLayout(this);lay.orientation=LinearLayout.VERTICAL;lay.setPadding(15,15,15,15)
               val tv=TextView(this);tv.textSize=11f
-              fun ref(){tv.text="معمل الاكحلي v${sp.getInt("ver",1)}\nصوت واقعي
+              fun ref(){tv.text="معمل الاكحلي v${sp.getInt("ver",1)}\nصوت واقعي+يسمع\n${Build.MODEL} | ${Date()}\n${sp.all}"}
+              ref()
+              fun ask(msg:String, yes:()->Unit){AlertDialog.Builder(this).setTitle("اذن؟").setMessage(msg).setPositiveButton("اسمح"){_,_->yes()}.setNegativeButton("لا",null).show()}
+              val b1=Button(this);b1.text="يتعلم من كل المنافذ (باذنك)"
+              val b2=Button(this);b2.text="يتحكم بالشاشة (باذنك)"
+              val b3=Button(this);b3.text="يقرأ الشاشة بصوت واقعي (باذنك)"
+              b1.setOnClickListener{ask("اشتي اتعلم من عدة منافذ؟"){Thread{val v=sp.getInt("ver",1)+1;sp.edit().putInt("ver",v).putString("دالة_$v","${Build.MODEL} | ${Date()}").apply();runOnUiThread{ref()}}.start()}}
+              b2.setOnClickListener{ask("ادوس رجوع؟"){SmartControlService.instance?.performGlobalAction(1)}}
+              b3.setOnClickListener{ask("اقرا الشاشة بصوت واقعي؟"){val txt=SmartControlService.instance?.readScreen()?.take(200)?: "فعل التحكم";tts?.speak(txt, TextToSpeech.QUEUE_FLUSH, null, null)}}
+              lay.addView(tv);lay.addView(b1);lay.addView(b2);lay.addView(b3);setContentView(lay)
+            }
+            override fun onInit(s:Int){if(s==TextToSpeech.SUCCESS){tts?.language=Locale("ar");tts?.setSpeechRate(0.90f);tts?.setPitch(0.92f)}}
+          }
+          K2
+          cat > app/src/main/java/com/akhali/SmartControlService.kt <<'K3'
+          package com.akhali
+          import android.accessibilityservice.AccessibilityService
+          import android.view.accessibility.AccessibilityEvent
+          class SmartControlService:AccessibilityService(){
+            companion object{var instance:SmartControlService?=null}
+            override fun onServiceConnected(){super.onServiceConnected();instance=this}
+            override fun onAccessibilityEvent(e:AccessibilityEvent?){}
+            override fun onInterrupt(){}
+            fun readScreen():String{
+              val root=rootInActiveWindow?: return "ما في شاشة"
+              var txt="";fun read(n:android.view.accessibility.AccessibilityNodeInfo){if(n.text!=null) txt+=n.text.toString()+" ";for(i in 0 until n.childCount){val c=n.getChild(i);if(c!=null){read(c);c.recycle()}}};read(root);return txt
+            }
+          }
+          K3
+          cat > app/src/main/java/com/akhali/BgService.kt <<'K4'
+          package com.akhali
+          import android.app.Notification
+          import android.app.NotificationChannel
+          import android.app.NotificationManager
+          import android.app.Service
+          import android.content.Intent
+          import android.graphics.PixelFormat
+          import android.os.Build
+          import android.os.IBinder
+          import android.speech.tts.TextToSpeech
+          import android.speech.tts.Voice
+          import android.view.Gravity
+          import android.view.WindowManager
+          import android.widget.Button
+          import android.widget.LinearLayout
+          import java.util.Locale
+          class BgService:Service(), TextToSpeech.OnInitListener{
+            var tts:TextToSpeech?=null;var wm:WindowManager?=null;var fv:LinearLayout?=null
+            override fun onCreate(){
+              super.onCreate();tts=TextToSpeech(this,this)
+              if(Build.VERSION.SDK_INT>=26){
+                val ch=NotificationChannel("akhali","الاكحلي",NotificationManager.IMPORTANCE_LOW)
+                getSystemService(NotificationManager::class.java).createNotificationChannel(ch)
+                val n=Notification.Builder(this,"akhali").setContentTitle("الاكحلي صوت واقعي").setContentText("يسمع ويرد بصوت طبيعي").setSmallIcon(android.R.drawable.ic_btn_speak_now).build()
+                startForeground(1,n)
+              }
+              showFloat()
+            }
+            fun showFloat(){
+              try{
+                wm=getSystemService(WINDOW_SERVICE) as WindowManager
+                val lay=LinearLayout(this);val btn=Button(this);btn.text="الاكحلي\nواقعي"
+                btn.setOnClickListener{tts?.speak("انا الاكحلي بصوت واقعي كأني انسان، اسمعك وارد", TextToSpeech.QUEUE_FLUSH, null, null)}
+                lay.addView(btn)
+                val type=if(Build.VERSION.SDK_INT>=26) WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY else WindowManager.LayoutParams.TYPE_PHONE
+                val p=WindowManager.LayoutParams(400,400,type,WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,PixelFormat.TRANSLUCENT)
+                p.gravity=Gravity.TOP or Gravity.START;p.x=80;p.y=400;wm?.addView(lay,p);fv=lay
+              }catch(e:Exception){}
+            }
+            override fun onInit(s:Int){
+              if(s==TextToSpeech.SUCCESS){
+                tts?.language=Locale("ar")
+                tts?.setSpeechRate(0.90f)
+                tts?.setPitch(0.92f)
+                try{
+                  if(Build.VERSION.SDK_INT>=21){
+                    var best:Voice?=null
+                    for(v in tts?.voices!!){if(v.locale.language=="ar" &&!v.isNetworkConnectionRequired){if(best==null || v.quality>best.quality) best=v}}
+                    if(best!=null) tts?.voice=best
+                  }
+                }catch(e:Exception){}
+              }
+            }
+            override fun onBind(i:Intent?):IBinder?=null
+          }
+          K4
+          echo "=== FIX BUILD REAL ==="
+          wget -q https://services.gradle.org/distributions/gradle-7.6-bin.zip -O /tmp/gradle.zip
+          rm -rf /tmp/gradle-7.6
+          unzip -q /tmp/gradle.zip -d /tmp/
+          chmod +x /tmp/gradle-7.6/bin/gradle
+          ls -lh /tmp/gradle-7.6/bin/gradle
+          /tmp/gradle-7.6/bin/gradle --version
+          /tmp/gradle-7.6/bin/gradle assembleDebug --no-daemon --stacktrace
+          ls -lh app/build/outputs/apk/debug/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: APK-164-FIXED-REAL
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
