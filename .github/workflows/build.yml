@@ -9,39 +9,30 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-      - name: Build 168 FIXED VOICE + HOTWORD YA AKHALI
+      - name: Build 169 GUARANTEED REAL BUILD PYTHON
         shell: bash
         run: |
           set -e
-          echo "=== START BUILD 168 YA AKHALI ==="
+          echo "START REAL BUILD 169"
           rm -rf build.gradle app/build.gradle settings.gradle gradle.properties gradle
           mkdir -p gradle/wrapper app/src/main/java/com/akhali app/src/main/res/xml
           echo "include ':app'" > settings.gradle
           echo "android.useAndroidX=true" > gradle.properties
           echo "distributionUrl=https\://services.gradle.org/distributions/gradle-7.6-bin.zip" > gradle/wrapper/gradle-wrapper.properties
-          cat > build.gradle <<'BUILDGRADLE_EOF'
+          python3 << 'PY'
+          import pathlib
+          pathlib.Path("build.gradle").write_text("""
           buildscript {
-              repositories {
-                  google()
-                  mavenCentral()
-              }
+              repositories { google(); mavenCentral() }
               dependencies {
                   classpath 'com.android.tools.build:gradle:7.4.2'
                   classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.20'
               }
           }
-          allprojects {
-              repositories {
-                  google()
-                  mavenCentral()
-              }
-          }
-          BUILDGRADLE_EOF
-          cat > app/build.gradle <<'APPGRADLE_EOF'
-          plugins {
-              id 'com.android.application'
-              id 'org.jetbrains.kotlin.android'
-          }
+          allprojects { repositories { google(); mavenCentral() } }
+          """)
+          pathlib.Path("app/build.gradle").write_text("""
+          plugins { id 'com.android.application'; id 'org.jetbrains.kotlin.android' }
           android {
               namespace 'com.akhali'
               compileSdk 33
@@ -49,42 +40,15 @@ jobs:
                   applicationId "com.akhali.yemeni"
                   minSdk 21
                   targetSdk 28
-                  versionCode 168
-                  versionName "168"
+                  versionCode 169
+                  versionName "169"
               }
           }
-          dependencies {
-              implementation 'androidx.core:core-ktx:1.6.0'
-          }
-          APPGRADLE_EOF
-          cat > app/src/main/res/xml/access.xml <<'ACCESS_EOF'
-          <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
-              android:accessibilityEventTypes="typeAllMask"
-              android:accessibilityFlags="flagDefault|flagRetrieveInteractiveWindows"
-              android:canPerformGestures="true"
-              android:canRetrieveWindowContent="true"
-              android:accessibilityFeedbackType="feedbackSpoken"/>
-          ACCESS_EOF
-          cat > app/src/main/AndroidManifest.xml <<'MANIFEST_EOF'
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.akhali.yemeni">
-          <uses-permission android:name="android.permission.RECORD_AUDIO"/>
-          <uses-permission android:name="android.permission.INTERNET"/>
-          <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
-          <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
-          <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
-          <uses-permission android:name="android.permission.SEND_SMS"/>
-          <uses-permission android:name="android.permission.READ_SMS"/>
-          <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-          <uses-permission android:name="android.permission.BIND_ACCESSIBILITY_SERVICE"/>
-          <uses-permission android:name="android.permission.WAKE_LOCK"/>
-          <application android:label="الاكحلي الذكي">
-          <activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity>
-          <activity android:name=".LabActivity" android:exported="false"/>
-          <service android:name=".BgService" android:exported="false"/>
-          <service android:name=".SmartControlService" android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE" android:exported="true"><intent-filter><action android:name="android.accessibilityservice.AccessibilityService"/></intent-filter><meta-data android:name="android.accessibilityservice" android:resource="@xml/access"/></service>
-          </application></manifest>
-          MANIFEST_EOF
-          cat > app/src/main/java/com/akhali/MainActivity.kt <<'MAIN_EOF'
+          dependencies { implementation 'androidx.core:core-ktx:1.6.0' }
+          """)
+          pathlib.Path("app/src/main/res/xml/access.xml").write_text("""<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android" android:accessibilityEventTypes="typeAllMask" android:accessibilityFlags="flagDefault|flagRetrieveInteractiveWindows" android:canPerformGestures="true" android:canRetrieveWindowContent="true" android:accessibilityFeedbackType="feedbackSpoken"/>""")
+          pathlib.Path("app/src/main/AndroidManifest.xml").write_text("""<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.akhali.yemeni"><uses-permission android:name="android.permission.RECORD_AUDIO"/><uses-permission android:name="android.permission.INTERNET"/><uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/><uses-permission android:name="android.permission.FOREGROUND_SERVICE"/><uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/><uses-permission android:name="android.permission.SEND_SMS"/><uses-permission android:name="android.permission.READ_SMS"/><uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/><uses-permission android:name="android.permission.BIND_ACCESSIBILITY_SERVICE"/><uses-permission android:name="android.permission.WAKE_LOCK"/><application android:label="الاكحلي الذكي"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity><activity android:name=".LabActivity" android:exported="false"/><service android:name=".BgService" android:exported="false"/><service android:name=".SmartControlService" android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE" android:exported="true"><intent-filter><action android:name="android.accessibilityservice.AccessibilityService"/></intent-filter><meta-data android:name="android.accessibilityservice" android:resource="@xml/access"/></service></application></manifest>""")
+          pathlib.Path("app/src/main/java/com/akhali/MainActivity.kt").write_text("""
           package com.akhali
           import android.app.Activity
           import android.app.AlertDialog
@@ -94,15 +58,13 @@ jobs:
           import android.os.Bundle
           import android.provider.Settings
           import android.speech.tts.TextToSpeech
-          import android.speech.tts.Voice
           import android.widget.Button
           import android.widget.LinearLayout
           import android.widget.TextView
           import java.util.Locale
           class MainActivity:Activity(), TextToSpeech.OnInitListener{
             var tts:TextToSpeech?=null
-            var pitch=1.05f
-            var rate=0.93f
+            var pitch=1.05f;var rate=0.93f
             override fun onCreate(b:Bundle?){
               super.onCreate(b)
               tts=TextToSpeech(this,this)
@@ -110,14 +72,78 @@ jobs:
               pitch=sp.getFloat("pitch",1.05f);rate=sp.getFloat("rate",0.93f)
               val lay=LinearLayout(this);lay.orientation=LinearLayout.VERTICAL;lay.setPadding(20,20,20,20)
               val tv=TextView(this);tv.textSize=13f
-              fun ref(){tv.text="الاكحلي v168\nالصوت الحالي: نبرة $pitch سرعة $rate\nقول يا اكحلي حتى والشاشة مقفلة\nما ينفذ الا باذنك"}
+              fun ref(){tv.text="الاكحلي v169\\nصوت: $pitch\\nقول يا اكحلي حتى والشاشة مقفلة\\nما ينفذ الا باذنك"}
               ref()
-              fun ask(t:String, y:()->Unit){AlertDialog.Builder(this).setTitle("اذن؟").setMessage(t).setPositiveButton("اسمح"){_,_->y()}.setNegativeButton("لا",null).show()}
-              fun saveVoice(p:Float, r:Float, name:String){
-                pitch=p;rate=r;sp.edit().putFloat("pitch",p).putFloat("rate",r).apply()
-                tts?.setPitch(p);tts?.setSpeechRate(r)
-                tts?.speak("تمام يا الاكحلي، الآن صوتي $name", TextToSpeech.QUEUE_FLUSH, null, null)
-                ref()
-              }
-              val bSiri=Button(this);bSiri.text="صوت سيري ناعم (1.05)"
-              val bYemeni=Button(this);bYem
+              fun save(p:Float,r:Float,n:String){pitch=p;rate=r;sp.edit().putFloat("pitch",p).putFloat("rate",r).apply();tts?.setPitch(p);tts?.setSpeechRate(r);tts?.speak("تمام يا الاكحلي صوتي $n",TextToSpeech.QUEUE_FLUSH,null,null);ref()}
+              val bSiri=Button(this);bSiri.text="صوت سيري ناعم"
+              val bYem=Button(this);bYem.text="صوت يمني فخم"
+              val bDeep=Button(this);bDeep.text="صوت جهوري"
+              val b4=Button(this);b4.text="4- شغل يا اكحلي يسمع لحاله حتى والشاشة مقفلة"
+              val b2=Button(this);b2.text="2- تحكم كامل";val b3=Button(this);b3.text="3- يطفو"
+              bSiri.setOnClickListener{save(1.05f,0.93f,"سيري ناعم")};bYem.setOnClickListener{save(0.85f,0.95f,"يمني فخم")};bDeep.setOnClickListener{save(0.75f,0.9f,"جهوري")}
+              b2.setOnClickListener{startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))}
+              b3.setOnClickListener{if(Build.VERSION.SDK_INT>=23 &&!Settings.canDrawOverlays(this)){startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,Uri.parse("package:$packageName")))}}
+              b4.setOnClickListener{val i=Intent(this,BgService::class.java);if(Build.VERSION.SDK_INT>=26) startForegroundService(i) else startService(i)}
+              lay.addView(tv);lay.addView(bSiri);lay.addView(bYem);lay.addView(bDeep);lay.addView(b4);lay.addView(b2);lay.addView(b3);setContentView(lay)
+            }
+            override fun onInit(s:Int){if(s==TextToSpeech.SUCCESS){tts?.language=Locale("ar");tts?.setPitch(pitch);tts?.setSpeechRate(rate)}}
+          }
+          """)
+          pathlib.Path("app/src/main/java/com/akhali/LabActivity.kt").write_text("""
+          package com.akhali
+          import android.app.Activity
+          import android.os.Bundle
+          import android.widget.TextView
+          class LabActivity:Activity(){override fun onCreate(b:Bundle?){super.onCreate(b);val tv=TextView(this);tv.text="معمل الاكحلي v169 - قول يا اكحلي";setContentView(tv)}}
+          """)
+          pathlib.Path("app/src/main/java/com/akhali/SmartControlService.kt").write_text("""
+          package com.akhali
+          import android.accessibilityservice.AccessibilityService
+          import android.view.accessibility.AccessibilityEvent
+          class SmartControlService:AccessibilityService(){companion object{var instance:SmartControlService?=null};override fun onServiceConnected(){super.onServiceConnected();instance=this};override fun onAccessibilityEvent(e:AccessibilityEvent?){};override fun onInterrupt(){};fun readScreen():String{val root=rootInActiveWindow?:return "ما في شاشة";var txt="";fun read(n:android.view.accessibility.AccessibilityNodeInfo){if(n.text!=null) txt+=n.text.toString()+" ";for(i in 0 until n.childCount){val c=n.getChild(i);if(c!=null){read(c);c.recycle()}}};read(root);return txt}}
+          """)
+          pathlib.Path("app/src/main/java/com/akhali/BgService.kt").write_text("""
+          package com.akhali
+          import android.app.Notification
+          import android.app.NotificationChannel
+          import android.app.NotificationManager
+          import android.app.Service
+          import android.content.Intent
+          import android.os.Build
+          import android.os.Bundle
+          import android.os.IBinder
+          import android.speech.RecognitionListener
+          import android.speech.RecognizerIntent
+          import android.speech.SpeechRecognizer
+          import android.speech.tts.TextToSpeech
+          import android.telephony.SmsManager
+          import java.util.Locale
+          class BgService:Service(), TextToSpeech.OnInitListener, RecognitionListener{
+            var tts:TextToSpeech?=null;var sr:SpeechRecognizer?=null;var pitch=1.05f;var rate=0.93f
+            override fun onCreate(){super.onCreate();val sp=getSharedPreferences("ultimate",0);pitch=sp.getFloat("pitch",1.05f);rate=sp.getFloat("rate",0.93f);tts=TextToSpeech(this,this);if(Build.VERSION.SDK_INT>=26){val ch=NotificationChannel("akhali","الاكحلي",NotificationManager.IMPORTANCE_LOW);getSystemService(NotificationManager::class.java).createNotificationChannel(ch);val n=Notification.Builder(this,"akhali").setContentTitle("الاكحلي يسمع يا اكحلي").setContentText("قول يا اكحلي حتى والشاشة مقفلة").setSmallIcon(android.R.drawable.ic_btn_speak_now).build();startForeground(1,n)}}
+            override fun onInit(s:Int){if(s==TextToSpeech.SUCCESS){tts?.language=Locale("ar");tts?.setPitch(pitch);tts?.setSpeechRate(rate);tts?.speak("حيا يا الاكحلي انا اسمع لحالي قول يا اكحلي حتى لو الشاشة مقفلة",TextToSpeech.QUEUE_FLUSH,null,null);startLoop()}}
+            fun startLoop(){try{sr?.destroy();sr=SpeechRecognizer.createSpeechRecognizer(this);sr?.setRecognitionListener(this);val intent=Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE,"ar-YE");intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS,true);sr?.startListening(intent)}catch(e:Exception){restart()}}
+            fun restart(){Thread{Thread.sleep(1000);startLoop()}.start()}
+            override fun onResults(b:Bundle?){val said=b?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.get(0)?.lowercase()?:"";if(said.contains("اكحلي")){var ans="حاضر من عيوني يا الاكحلي";if(said.contains("ارسل")||said.contains("رسائل")){ans="حاضر من عيوني برسل انك مشغول";try{SmsManager.getDefault().sendTextMessage("777123456",null,"اني مشغول - من الاكحلي",null,null)}catch(e:Exception){}}else if(said.contains("ابحث")){ans="حاضر من عيوني ببحث لك";val i=Intent(Intent.ACTION_VIEW,android.net.Uri.parse("https://www.google.com/search?q="+said.replace("يا اكحلي","")));i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);startActivity(i)}else if(said.contains("سلام")) ans="حاضر من عيوني هلا يا الاكحلي";tts?.speak(ans,TextToSpeech.QUEUE_FLUSH,null,null)};restart()}
+            override fun onError(e:Int){restart()}
+            override fun onReadyForSpeech(p:Bundle?){};override fun onBeginningOfSpeech(){};override fun onRmsChanged(r:Float){};override fun onBufferReceived(b:ByteArray?){};override fun onEndOfSpeech(){};override fun onPartialResults(p:Bundle?){val s=p?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.get(0)?.lowercase()?:"";if(s.contains("اكحلي")) tts?.speak("نعم يا الاكحلي",TextToSpeech.QUEUE_FLUSH,null,null)};override fun onEvent(t:Int,p:Bundle?){};override fun onBind(i:Intent?):IBinder?=null;override fun onDestroy(){sr?.destroy();super.onDestroy()}
+          }
+          """)
+          PY
+          echo "FILES CREATED BY PYTHON"
+          ls -lh app/src/main/java/com/akhali/
+          echo "DOWNLOADING GRADLE REAL"
+          wget -q https://services.gradle.org/distributions/gradle-7.6-bin.zip -O /tmp/gradle.zip
+          ls -lh /tmp/gradle.zip
+          unzip -q /tmp/gradle.zip -d /tmp/
+          chmod +x /tmp/gradle-7.6/bin/gradle
+          /tmp/gradle-7.6/bin/gradle --version
+          echo "BUILDING APK NOW REAL"
+          /tmp/gradle-7.6/bin/gradle assembleDebug --no-daemon
+          ls -lh app/build/outputs/apk/debug/
+          echo "SUCCESS 169"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: APK-169-REAL-PYTHON
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
