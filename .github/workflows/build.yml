@@ -9,7 +9,7 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-      - name: Build 160 ULTIMATE ALL FEATURES ASK PERMISSION
+      - name: Build 163 REAL VOICE + LISTEN
         run: |
           set -x
           rm -rf build.gradle app/build.gradle settings.gradle gradle.properties gradle
@@ -19,27 +19,16 @@ jobs:
           echo "distributionUrl=https\://services.gradle.org/distributions/gradle-7.6-bin.zip" > gradle/wrapper/gradle-wrapper.properties
           cat > build.gradle <<'B'
           buildscript {
-              repositories {
-                  google()
-                  mavenCentral()
-              }
+              repositories { google(); mavenCentral() }
               dependencies {
                   classpath 'com.android.tools.build:gradle:7.4.2'
                   classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.20'
               }
           }
-          allprojects {
-              repositories {
-                  google()
-                  mavenCentral()
-              }
-          }
+          allprojects { repositories { google(); mavenCentral() } }
           B
           cat > app/build.gradle <<'A'
-          plugins {
-              id 'com.android.application'
-              id 'org.jetbrains.kotlin.android'
-          }
+          plugins { id 'com.android.application'; id 'org.jetbrains.kotlin.android' }
           android {
               namespace 'com.akhali'
               compileSdk 33
@@ -47,13 +36,11 @@ jobs:
                   applicationId "com.akhali.yemeni"
                   minSdk 21
                   targetSdk 28
-                  versionCode 161
-                  versionName "161"
+                  versionCode 163
+                  versionName "163"
               }
           }
-          dependencies {
-              implementation 'androidx.core:core-ktx:1.6.0'
-          }
+          dependencies { implementation 'androidx.core:core-ktx:1.6.0' }
           A
           cat > app/src/main/res/xml/access.xml <<'X'
           <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
@@ -94,7 +81,9 @@ jobs:
           import android.os.Bundle
           import android.os.Environment
           import android.provider.Settings
+          import android.speech.RecognizerIntent
           import android.speech.tts.TextToSpeech
+          import android.speech.tts.Voice
           import android.widget.Button
           import android.widget.LinearLayout
           import android.widget.TextView
@@ -108,66 +97,91 @@ jobs:
               val sp=getSharedPreferences("ultimate",0)
               val lay=LinearLayout(this);lay.orientation=LinearLayout.VERTICAL;lay.setPadding(20,20,20,20)
               val tv=TextView(this);tv.textSize=13f
-              fun ref(){
-                tv.text="الاكحلي الذكي الخارق v161\nLT اندرويد 9 - ما ينفذ الا باذنك\n\nالاصدار: ${sp.getInt("ver",1)}\nالنت: ${sp.getBoolean("allow_net",false)}\nالتحكم الكامل: ${Settings.Secure.getString(contentResolver,Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES)?.contains(packageName)}\nالتحكم: ${sp.getBoolean("allow_control",false)}\nالكود: ${sp.getBoolean("allow_code",false)}\n\nالمهام: يتحكم كليا+يقرا+يرسل+ينسخ+يثبت+يبحث+يعدل+يحدث نفسه+يتكلم+يطفو+خلفية مغلقة"
-              }
+              val tvChat=TextView(this);tvChat.textSize=14f;tvChat.text="قلت: --\nالاكحلي قال: --"
+              fun ref(){tv.text="الاكحلي الذكي الخارق v163\nصوت واقعي+يسمع ويرد\nLT اندرويد 9 - ما ينفذ الا باذنك\nالاصدار: ${sp.getInt("ver",1)}"}
               ref()
-              fun ask(title:String, onYes:()->Unit){
-                AlertDialog.Builder(this).setTitle("يا الاكحلي اذن لي؟").setMessage(title).setPositiveButton("اسمح"){_,_->onYes()}.setNegativeButton("لا"){_,_->tts?.speak("تمام ما سويت شي الا باذنك", TextToSpeech.QUEUE_FLUSH, null, null)}.show()
-                tts?.speak(title, TextToSpeech.QUEUE_FLUSH, null, null)
+              fun ask(title:String, onYes:()->Unit){AlertDialog.Builder(this).setTitle("يا الاكحلي اذن لي؟").setMessage(title).setPositiveButton("اسمح"){_,_->onYes()}.setNegativeButton("لا"){_,_->tts?.speak("تمام", TextToSpeech.QUEUE_FLUSH, null, null)}.show()}
+              val bTalk=Button(this);bTalk.text="0- كلم الاكحلي (صوت واقعي) وهو يرد"
+              bTalk.setOnClickListener{
+                ask("اشتي اسمعك وارد عليك بصوت واقعي، تسمح؟"){
+                  try{
+                    val i=Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+                    i.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                    i.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "ar-YE")
+                    i.putExtra(RecognizerIntent.EXTRA_PROMPT, "تكلم يا الاكحلي")
+                    startActivityForResult(i, 100)
+                  }catch(e:Exception){Toast.makeText(this,"نزل Google App عشان المايك يشتغل",Toast.LENGTH_LONG).show()}
+                }
               }
               val b1=Button(this);b1.text="1- اسمح للنت (عدة منافذ)"
-              val b2=Button(this);b2.text="2- اسمح بالتحكم الكامل بالجوال (مهم)"
+              val b2=Button(this);b2.text="2- اسمح بالتحكم الكامل (مهم)"
               val b3=Button(this);b3.text="3- اسمح يطفو فوق التطبيقات"
-              val b4=Button(this);b4.text="4- شغل الاكحلي في الخلفية حتى لو مغلق ويتكلم"
-              val b5=Button(this);b5.text="5- افتح معمل الاكحلي الذكي يحدث نفسه"
-              val b6=Button(this);b6.text="6- يبحث لك في النت (باذنك)"
-              val b7=Button(this);b7.text="7- ينسخ نص (باذنك)"
-              val b8=Button(this);b8.text="8- تحديث تلقائي من النت"
-              b1.setOnClickListener{ask("اشتي اسمح لنفسي اشل معلومات من عدة منافذ من النت، تسمح؟"){sp.edit().putBoolean("allow_net",true).apply();ref();checkUpdate()}}
-              b2.setOnClickListener{ask("اشتي اتحكم بجوالك LT كليا ادوس واكتب واقرا الشاشة، تسمح تروح تفعلني في اعدادات امكانية الوصول؟"){startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))}}
-              b3.setOnClickListener{ask("اشتي اطفو فوق كل التطبيقات حتى لو قفلتني، تسمح؟"){if(Build.VERSION.SDK_INT>=23 &&!Settings.canDrawOverlays(this)){startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")))}}}
-              b4.setOnClickListener{ask("اشتي اشتغل في الخلفية واتكلم حتى لو قفلتني، تسمح؟"){val i=Intent(this,BgService::class.java);if(Build.VERSION.SDK_INT>=26) startForegroundService(i) else startService(i);tts?.speak("حيا انا الاكحلي الذكي في الخلفية حتى لو قفلتني، ما انفذ اي امر الا باذنك", TextToSpeech.QUEUE_FLUSH, null, null)}}
+              val b4=Button(this);b4.text="4- شغل في الخلفية حتى لو مغلق ويتكلم"
+              val b5=Button(this);b5.text="5- افتح معمل الاكحلي"
+              val b6=Button(this);b6.text="6- يبحث لك (باذنك)"
+              val b7=Button(this);b7.text="7- ينسخ (باذنك)"
+              val b8=Button(this);b8.text="8- تحديث تلقائي"
+              b1.setOnClickListener{ask("اشتي اشل من عدة منافذ من النت، تسمح؟"){sp.edit().putBoolean("allow_net",true).apply();ref()}}
+              b2.setOnClickListener{ask("اشتي اتحكم بجوالك LT كليا، تسمح تفعلني في امكانية الوصول؟"){startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))}}
+              b3.setOnClickListener{ask("اشتي اطفو فوق التطبيقات، تسمح؟"){if(Build.VERSION.SDK_INT>=23 &&!Settings.canDrawOverlays(this)){startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")))}}}
+              b4.setOnClickListener{ask("اشتي اشتغل في الخلفية حتى لو قفلتني، تسمح؟"){val i=Intent(this,BgService::class.java);if(Build.VERSION.SDK_INT>=26) startForegroundService(i) else startService(i)}}
               b5.setOnClickListener{startActivity(Intent(this,LabActivity::class.java))}
-              b6.setOnClickListener{ask("اشتي افتح جوجل وابحث لك، تسمح؟"){val intent=Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/search?q=الاكحلي+اليمن"));startActivity(intent)}}
-              b7.setOnClickListener{ask("اشتي انسخ نص للحافظة، تسمح؟"){val cm=getSystemService(CLIPBOARD_SERVICE) as ClipboardManager;cm.setPrimaryClip(ClipData.newPlainText("الاكحلي", "الاكحلي الذكي نسخ هذا باذنك!"));Toast.makeText(this,"نسخت باذنك",Toast.LENGTH_SHORT).show()}}
-              b8.setOnClickListener{ask("اشتي اشيك اذا في تحديث جديد واحمله من النت، تسمح؟"){checkUpdate()}}
-              lay.addView(tv);lay.addView(b1);lay.addView(b2);lay.addView(b3);lay.addView(b4);lay.addView(b5);lay.addView(b6);lay.addView(b7);lay.addView(b8);setContentView(lay)
+              b6.setOnClickListener{val intent=Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/search?q=الاكحلي"));startActivity(intent)}
+              b7.setOnClickListener{val cm=getSystemService(CLIPBOARD_SERVICE) as ClipboardManager;cm.setPrimaryClip(ClipData.newPlainText("الاكحلي", "نسخ باذنك"));Toast.makeText(this,"نسخت",Toast.LENGTH_SHORT).show()}
+              b8.setOnClickListener{checkUpdate()}
+              lay.addView(tv);lay.addView(tvChat);lay.addView(bTalk);lay.addView(b1);lay.addView(b2);lay.addView(b3);lay.addView(b4);lay.addView(b5);lay.addView(b6);lay.addView(b7);lay.addView(b8);setContentView(lay)
             }
-            fun checkUpdate(){
-              Thread{
+            override fun onActivityResult(rc:Int, res:Int, data:Intent?){
+              super.onActivityResult(rc,res,data)
+              if(rc==100 && res==RESULT_OK){
+                val said=data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.get(0)?:""
+                if(said.isNotEmpty()){
+                  Toast.makeText(this,"قلت: $said",Toast.LENGTH_SHORT).show()
+                  var ans="سمعتك تقول $said ، تامر بشي يا الاكحلي؟"
+                  val s=said.lowercase()
+                  if(s.contains("سلام")||s.contains("حيا")||s.contains("مرحبا")) ans="حيا حيا بالاكحلي، هلا وغلا، صوتي صار واقعي صح؟"
+                  else if(s.contains("كيف")) ans="بخير يا الاكحلي، صوتي الان واقعي وطبيعي، اش تامر؟"
+                  else if(s.contains("اسمك")) ans="انا الاكحلي الذكي، صوتي صار واقعي كأني جنبك"
+                  else if(s.contains("ابحث")){ans="ببحث لك باذنك"; startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/search?q=$said")))}
+                  tts?.speak(ans, TextToSpeech.QUEUE_FLUSH, null, null)
+                }
+              }
+            }
+            fun checkUpdate(){Thread{try{val txt=java.net.URL("https://api.github.com/repos/AlAkhaly/AlAkhalyAssistant/releases/latest").readText();if(txt.contains("apk")||txt.contains("APK")){runOnUiThread{downloadApk()}}}catch(e:Exception){}}.start()}
+            fun downloadApk(){try{val dm=getSystemService(DOWNLOAD_SERVICE) as DownloadManager;val req=DownloadManager.Request(Uri.parse("https://github.com/AlAkhaly/AlAkhalyAssistant/releases/latest/download/app-debug.apk"));req.setTitle("الاكحلي تحديث");req.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS,"alakhali-update.apk");req.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);dm.enqueue(req)}catch(e:Exception){}}
+            override fun onInit(s:Int){
+              if(s==TextToSpeech.SUCCESS){
+                tts?.language=Locale("ar")
+                // صوت واقعي
+                tts?.setSpeechRate(0.90f)
+                tts?.setPitch(0.92f)
                 try{
-                  val txt=java.net.URL("https://api.github.com/repos/AlAkhaly/AlAkhalyAssistant/releases/latest").readText()
-                  if(txt.contains("apk")||txt.contains("APK")){
-                    runOnUiThread{Toast.makeText(this,"الاكحلي لقى تحديث بيحمله باذنك",Toast.LENGTH_LONG).show();downloadApk()}
+                  if(Build.VERSION.SDK_INT>=21){
+                    val voices=tts?.voices
+                    var best:Voice?=null
+                    for(v in voices!!){
+                      if(v.locale.language=="ar" && !v.isNetworkConnectionRequired){
+                        if(best==null || v.quality>best.quality) best=v
+                      }
+                    }
+                    if(best!=null) tts?.voice=best
                   }
                 }catch(e:Exception){}
-              }.start()
+                tts?.speak("حيا بالاكحلي، صوتي صار واقعي وطبيعي كأني انسان جنبك، اسمعك وارد عليك", TextToSpeech.QUEUE_FLUSH, null, null)
+              }
             }
-            fun downloadApk(){
-              try{
-                val dm=getSystemService(DOWNLOAD_SERVICE) as DownloadManager
-                val req=DownloadManager.Request(Uri.parse("https://github.com/AlAkhaly/AlAkhalyAssistant/releases/latest/download/app-debug.apk"))
-                req.setTitle("الاكحلي تحديث");req.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS,"alakhali-update.apk")
-                req.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);dm.enqueue(req)
-              }catch(e:Exception){}
-            }
-            override fun onInit(s:Int){if(s==TextToSpeech.SUCCESS){tts?.language=Locale("ar");tts?.speak("حيا بالاكحلي كل المميزات جاهزة وما انفذ الا باذنك", TextToSpeech.QUEUE_FLUSH, null, null)}}
           }
           K
           cat > app/src/main/java/com/akhali/LabActivity.kt <<'K2'
           package com.akhali
           import android.app.Activity
           import android.app.AlertDialog
-          import android.content.Intent
-          import android.net.Uri
           import android.os.Build
           import android.os.Bundle
           import android.speech.tts.TextToSpeech
           import android.widget.Button
           import android.widget.LinearLayout
           import android.widget.TextView
-          import android.widget.Toast
           import java.util.Date
           import java.util.Locale
           class LabActivity:Activity(), TextToSpeech.OnInitListener{
@@ -178,124 +192,4 @@ jobs:
               val sp=getSharedPreferences("ultimate",0)
               val lay=LinearLayout(this);lay.orientation=LinearLayout.VERTICAL;lay.setPadding(15,15,15,15)
               val tv=TextView(this);tv.textSize=11f
-              fun ref(){
-                val ver=sp.getInt("ver",1)
-                tv.text="معمل الاكحلي الذكي الخارق v$ver\nما ينفذ الا باذنك\n\nالمنفذ 1 [الجهاز LT]: ${Build.MODEL} ${Build.VERSION.RELEASE}\nالمنفذ 2 [الوقت]: ${Date()}\nالمنفذ 3 [النت]: ${if(sp.getBoolean("allow_net",false)) "مسموح" else "مغلق"}\nالمنفذ 4 [الذاكرة]: ${sp.all.size} دوال ومهام\nالمنفذ 5 [التحكم الكامل]: ${SmartControlService.instance!=null}\n\nالاكحلي تعلم لحاله:\n${sp.all.entries.joinToString("\n")}"
-              }
-              ref()
-              fun ask(msg:String, yes:()->Unit){
-                AlertDialog.Builder(this).setTitle("اذن يا الاكحلي؟").setMessage(msg).setPositiveButton("اسمح"){_,_->yes()}.setNegativeButton("لا"){_,_->tts?.speak("تمام ما نفذت", TextToSpeech.QUEUE_FLUSH, null, null)}.show()
-                tts?.speak(msg, TextToSpeech.QUEUE_FLUSH, null, null)
-              }
-              val b1=Button(this);b1.text="يتعلم من كل المنافذ ويبرمج نفسه (باذنك)"
-              val b2=Button(this);b2.text="يتعلم من النت لحاله (باذنك)"
-              val b3=Button(this);b3.text="يتحكم بالشاشة يدوس رجوع (باذنك)"
-              val b4=Button(this);b4.text="يقرأ الشاشة ويتكلم (باذنك)"
-              val b5=Button(this);b5.text="يثبت تطبيق (باذنك)"
-              b1.setOnClickListener{ask("اشتي اشل من الجهاز والوقت والنت والذاكرة وابر مج دالة جديدة لحالي، تسمح؟"){
-                Thread{
-                  try{
-                    var net="مغلق"
-                    if(sp.getBoolean("allow_net",false)){try{net=java.net.URL("https://worldtimeapi.org/api/ip").readText().take(50)}catch(e:Exception){net="ضعيف"}}
-                    val v=sp.getInt("ver",1)+1
-                    sp.edit().putInt("ver",v).putString("دالة_الاكحلي_ذكية_$v","LT:${Build.MODEL} | $net | ${Date()}").apply()
-                    runOnUiThread{ref();Toast.makeText(this,"تعلمت من كل المنافذ باذنك v$v",Toast.LENGTH_LONG).show();tts?.speak("تعلمت مهمة جديدة باذنك", TextToSpeech.QUEUE_FLUSH, null, null)}
-                  }catch(e:Exception){}
-                }.start()
-              }}
-              b2.setOnClickListener{ask("اشتي اتعلم حكمة جديدة من النت لحالي، تسمح؟"){
-                Thread{
-                  try{
-                    if(!sp.getBoolean("allow_net",false)){runOnUiThread{Toast.makeText(this,"النت مغلق يا اكحلي",Toast.LENGTH_SHORT).show()};return@Thread}
-                    val wisdom=java.net.URL("https://api.github.com/zen").readText()
-                    val v=sp.getInt("ver",1)+1
-                    sp.edit().putInt("ver",v).putString("حكمة_الاكحلي_$v",wisdom).apply()
-                    runOnUiThread{ref();Toast.makeText(this,"شل حكمة: $wisdom",Toast.LENGTH_LONG).show();tts?.speak("تعلمت حكمة", TextToSpeech.QUEUE_FLUSH, null, null)}
-                  }catch(e:Exception){}
-                }.start()
-              }}
-              b3.setOnClickListener{ask("اشتي ادوس زر الرجوع واتحكم بالشاشة، تسمح؟"){SmartControlService.instance?.performGlobalAction(1);Toast.makeText(this,"دست رجوع باذنك",Toast.LENGTH_SHORT).show()}}
-              b4.setOnClickListener{ask("اشتي اقرا لك ايش في الشاشة واتكلم لك، تسمح؟"){
-                val txt=SmartControlService.instance?.readScreen()?.take(200)?: "فعل التحكم الكامل اول"
-                Toast.makeText(this,txt,Toast.LENGTH_LONG).show()
-                tts?.speak(txt, TextToSpeech.QUEUE_FLUSH, null, null)
-              }}
-              b5.setOnClickListener{ask("اشتي اثبت تطبيق من التحميلات، تسمح؟"){
-                try{val i=Intent(Intent.ACTION_VIEW);i.setDataAndType(Uri.parse("file:///sdcard/Download/alakhali-update.apk"),"application/vnd.android.package-archive");i.flags=Intent.FLAG_ACTIVITY_NEW_TASK;startActivity(i)}catch(e:Exception){Toast.makeText(this,"حط APK في التحميلات",Toast.LENGTH_SHORT).show()}
-              }}
-              lay.addView(tv);lay.addView(b1);lay.addView(b2);lay.addView(b3);lay.addView(b4);lay.addView(b5);setContentView(lay)
-            }
-            override fun onInit(s:Int){if(s==TextToSpeech.SUCCESS){tts?.language=Locale("ar")}}
-          }
-          K2
-          cat > app/src/main/java/com/akhali/SmartControlService.kt <<'K3'
-          package com.akhali
-          import android.accessibilityservice.AccessibilityService
-          import android.view.accessibility.AccessibilityEvent
-          class SmartControlService:AccessibilityService(){
-            companion object{var instance:SmartControlService?=null}
-            override fun onServiceConnected(){super.onServiceConnected();instance=this}
-            override fun onAccessibilityEvent(e:AccessibilityEvent?){}
-            override fun onInterrupt(){}
-            fun readScreen():String{
-              val root=rootInActiveWindow?: return "ما في شاشة، فعل التحكم الكامل"
-              var txt="";fun read(n:android.view.accessibility.AccessibilityNodeInfo){if(n.text!=null) txt+=n.text.toString()+" ";for(i in 0 until n.childCount){val c=n.getChild(i);if(c!=null){read(c);c.recycle()}}};read(root);return if(txt.isEmpty()) "شاشة فاضية" else txt
-            }
-          }
-          K3
-          cat > app/src/main/java/com/akhali/BgService.kt <<'K4'
-          package com.akhali
-          import android.app.Notification
-          import android.app.NotificationChannel
-          import android.app.NotificationManager
-          import android.app.Service
-          import android.content.Intent
-          import android.graphics.PixelFormat
-          import android.os.Build
-          import android.os.IBinder
-          import android.speech.tts.TextToSpeech
-          import android.view.Gravity
-          import android.view.WindowManager
-          import android.widget.Button
-          import android.widget.LinearLayout
-          import java.util.Locale
-          class BgService:Service(), TextToSpeech.OnInitListener{
-            var tts:TextToSpeech?=null;var wm:WindowManager?=null;var fv:LinearLayout?=null
-            override fun onCreate(){
-              super.onCreate();tts=TextToSpeech(this,this)
-              if(Build.VERSION.SDK_INT>=26){
-                val ch=NotificationChannel("akhali","الاكحلي الذكي باذنك",NotificationManager.IMPORTANCE_LOW)
-                getSystemService(NotificationManager::class.java).createNotificationChannel(ch)
-                val n=Notification.Builder(this,"akhali").setContentTitle("الاكحلي الذكي شغال باذنك").setContentText("يتحكم كليا ويتحدث حتى لو مغلق LT وما ينفذ الا باذنك").setSmallIcon(android.R.drawable.ic_btn_speak_now).build()
-                startForeground(1,n)
-              }
-              showFloat()
-            }
-            fun showFloat(){
-              try{
-                wm=getSystemService(WINDOW_SERVICE) as WindowManager
-                val lay=LinearLayout(this);lay.orientation=LinearLayout.VERTICAL
-                val btn=Button(this);btn.text="الاكحلي\nالذكي\nباذنك"
-                btn.setOnClickListener{tts?.speak("انا الاكحلي الذكي الخارق في الخلفية حتى لو قفلتني، ما انفذ اي امر الا باذنك، اطفو واتكلم واتحكم كليا واقرا وارسل واثبت وابحث وانسخ واعدل و احدث نفسي من عدة منافذ", TextToSpeech.QUEUE_FLUSH, null, null)}
-                lay.addView(btn)
-                val type=if(Build.VERSION.SDK_INT>=26) WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY else WindowManager.LayoutParams.TYPE_PHONE
-                val p=WindowManager.LayoutParams(400,400,type,WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,PixelFormat.TRANSLUCENT)
-                p.gravity=Gravity.TOP or Gravity.START;p.x=80;p.y=400;wm?.addView(lay,p);fv=lay
-              }catch(e:Exception){}
-            }
-            override fun onInit(s:Int){if(s==TextToSpeech.SUCCESS){tts?.language=Locale("ar")}}
-            override fun onBind(i:Intent?):IBinder?=null
-          }
-          K4
-          echo "---- FIX BUILD FAILURE ----"
-          curl -L -o /tmp/gradle.zip https://services.gradle.org/distributions/gradle-7.6-bin.zip
-          rm -rf /tmp/gradle-7.6
-          unzip -q /tmp/gradle.zip -d /tmp/
-          chmod +x /tmp/gradle-7.6/bin/gradle
-          /tmp/gradle-7.6/bin/gradle assembleDebug --no-daemon --info
-          ls -lh app/build/outputs/apk/debug/
-      - uses: actions/upload-artifact@v4
-        with:
-          name: APK-161-FIXED
-          path: app/build/outputs/apk/debug/*.apk
-          if-no-files-found: error
+              fun ref(){tv.text="معمل الاكحلي v${sp.getInt("ver",1)}\nصوت واقعي
